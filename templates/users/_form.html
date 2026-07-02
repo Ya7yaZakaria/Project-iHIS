@@ -1,0 +1,10 @@
+{{ form.hidden_tag() }}
+<div class="row g-3">
+  {% for field in [form.first_name, form.last_name, form.username, form.email, form.phone] %}<div class="col-md-6">{{ field.label(class="form-label") }}{{ field(class="form-control" + (" is-invalid" if field.errors else "")) }}{% for error in field.errors %}<div class="invalid-feedback">{{ error }}</div>{% endfor %}</div>{% endfor %}
+  <div class="col-md-6">{{ form.role_id.label(class="form-label") }}{{ form.role_id(class="form-select" + (" is-invalid" if form.role_id.errors else "")) }}{% for error in form.role_id.errors %}<div class="invalid-feedback">{{ error }}</div>{% endfor %}</div>
+  <div class="col-md-6">{{ form.department_id.label(class="form-label") }}{{ form.department_id(class="form-select") }}</div>
+  <div class="col-md-6">{{ form.specialty_id.label(class="form-label") }}{{ form.specialty_id(class="form-select") }}<div class="form-text">Used for Doctor and Women’s Health Doctor accounts.</div></div>
+  <div class="col-md-6">{{ form.license_number.label(class="form-label") }}{{ form.license_number(class="form-control") }}</div>
+  {% if form.password is defined %}{% for field in [form.password, form.confirm_password] %}<div class="col-md-6">{{ field.label(class="form-label") }}{{ field(class="form-control" + (" is-invalid" if field.errors else ""), autocomplete="new-password") }}{% for error in field.errors %}<div class="invalid-feedback">{{ error }}</div>{% endfor %}</div>{% endfor %}{% endif %}
+</div>
+<div class="d-flex gap-2 mt-4">{{ form.submit(class="btn btn-primary") }}<a class="btn btn-outline-secondary" href="{{ url_for('users_admin.index') }}">Cancel</a></div>

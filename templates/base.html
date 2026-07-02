@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en" data-bs-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Intelligent Health Information System">
+  <title>{% block title %}iHIS Dashboard{% endblock %}</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <link href="{{ url_for('static', filename='css/app.css') }}" rel="stylesheet">
+</head>
+<body>
+  <nav class="navbar navbar-expand bg-body-tertiary border-bottom fixed-top" aria-label="Top navigation">
+    <div class="container-fluid">
+      <button class="btn btn-outline-secondary d-lg-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebar" aria-controls="sidebar" aria-label="Open navigation">
+        <i class="bi bi-list"></i>
+      </button>
+      <a class="navbar-brand fw-semibold ms-2" href="{{ url_for('dashboard') }}"><span class="brand-mark">i</span>HIS</a>
+      <form class="d-none d-md-flex flex-grow-1 mx-4" role="search">
+        <input class="form-control" type="search" placeholder="Search patients, visits, reports…" aria-label="Search" disabled>
+      </form>
+      <div class="d-flex align-items-center gap-2">
+        <button id="theme-toggle" class="btn btn-outline-secondary" type="button" aria-label="Toggle dark mode"><i class="bi bi-moon-stars"></i></button>
+        <button class="btn btn-outline-secondary position-relative" type="button" aria-label="Notifications" disabled><i class="bi bi-bell"></i></button>
+        {% if current_user.is_authenticated %}<a class="btn btn-outline-primary d-none d-sm-inline" href="{{ url_for('auth.profile') }}"><i class="bi bi-person-circle me-1"></i>{{ current_user.first_name }}</a><a class="btn btn-outline-danger" href="{{ url_for('auth.logout') }}" aria-label="Sign out"><i class="bi bi-box-arrow-right"></i></a>{% else %}<a class="btn btn-primary" href="{{ url_for('auth.login') }}">Sign in</a>{% endif %}
+      </div>
+    </div>
+  </nav>
+
+  <div class="offcanvas-lg offcanvas-start sidebar border-end" tabindex="-1" id="sidebar" aria-labelledby="sidebar-label">
+    <div class="offcanvas-header border-bottom">
+      <h2 class="offcanvas-title fs-5" id="sidebar-label">Portals</h2>
+      <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#sidebar" aria-label="Close"></button>
+    </div>
+    <div class="offcanvas-body p-3">
+      <nav class="nav nav-pills flex-column gap-1" aria-label="Role-based portal placeholders">
+        <a class="nav-link active" href="{{ url_for('dashboard') }}"><i class="bi bi-grid me-2"></i>Overview</a>
+        {% set portals = [
+          ('person', 'Patient'), ('heart-pulse', 'Doctor'), ('gender-female', "Women's Health"),
+          ('clipboard2-pulse', 'Laboratory'), ('radioactive', 'Radiology'), ('capsule', 'Pharmacy'),
+          ('emoji-smile', 'Dentistry'), ('activity', 'Rehabilitation'), ('bandaid', 'Nursing'),
+          ('calendar-check', 'Reception'), ('building', 'Administration'), ('shield-lock', 'Super Admin')
+        ] %}
+        {% for icon, portal in portals %}{% if current_user.is_authenticated and (current_user.has_role('Super Admin') or current_user.has_role(portal) or (portal == "Women's Health" and current_user.has_role("Women’s Health Doctor"))) %}<span class="nav-link"><i class="bi bi-{{ icon }} me-2"></i>{{ portal }}</span>{% endif %}{% endfor %}
+      </nav>
+      <div class="sidebar-note mt-4 p-3 rounded-3">
+        <small class="text-uppercase fw-semibold">RBAC placeholder</small>
+        <p class="small mb-0 mt-1">Navigation is filtered by authenticated role membership.</p>
+      </div>
+      {% if current_user.is_authenticated and current_user.has_role('Super Admin', 'Admin') %}<hr><p class="small text-uppercase text-body-secondary fw-semibold">Administration</p><a class="nav-link" href="{{ url_for('users_admin.index') }}"><i class="bi bi-people me-2"></i>User Management</a><a class="nav-link" href="{{ url_for('roles_admin.index') }}"><i class="bi bi-key me-2"></i>Roles & Permissions</a>{% endif %}
+    </div>
+  </div>
+
+  <main class="main-content">
+    <div class="container-fluid p-4 p-xl-5">{% block content %}{% endblock %}</div>
+  </main>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+  <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>

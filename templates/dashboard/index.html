@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}Dashboard | iHIS{% endblock %}
+{% block content %}
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+  <div><p class="text-primary fw-semibold mb-1">CENTRAL CLINICAL WORKSPACE</p><h1 class="h2 mb-1">Good day, care team</h1><p class="text-body-secondary mb-0">A modular foundation for connected, patient-centred care.</p></div>
+  <button class="btn btn-primary" disabled><i class="bi bi-plus-lg me-2"></i>New clinical action</button>
+</div>
+<div class="row g-4 mb-4">
+  {% for icon, label, value, note in [
+    ('calendar2-check','Today’s appointments','—','Appointment module pending'),
+    ('people','Active patients','—','Patient models pending'),
+    ('exclamation-triangle','Critical alerts','—','Rules engine pending'),
+    ('file-medical','Pending reports','—','Reporting module pending')
+  ] %}
+  <div class="col-sm-6 col-xl-3"><article class="card metric-card h-100 border-0 shadow-sm"><div class="card-body"><div class="metric-icon mb-3"><i class="bi bi-{{ icon }}"></i></div><p class="text-body-secondary mb-1">{{ label }}</p><p class="display-6 fw-semibold mb-1">{{ value }}</p><small class="text-body-secondary">{{ note }}</small></div></article></div>
+  {% endfor %}
+</div>
+<div class="row g-4">
+  <div class="col-lg-8"><section class="card border-0 shadow-sm h-100"><div class="card-body p-4"><div class="d-flex justify-content-between"><div><h2 class="h5">Clinical activity</h2><p class="text-body-secondary">Chart.js-ready reporting surface</p></div><span class="badge text-bg-light align-self-start">Phase 1</span></div><div class="empty-state rounded-3 d-flex flex-column align-items-center justify-content-center text-center"><i class="bi bi-bar-chart-line fs-1 text-primary"></i><p class="fw-semibold mt-3 mb-1">Data visualization prepared</p><small class="text-body-secondary">Live metrics arrive with the clinical modules.</small></div></div></section></div>
+  <div class="col-lg-4"><section class="card ai-card border-0 shadow-sm h-100"><div class="card-body p-4"><span class="badge rounded-pill text-bg-primary mb-3"><i class="bi bi-stars me-1"></i>Future AI layer</span><h2 class="h4">Clinical assistant</h2><p class="text-body-secondary">A secure integration boundary is ready for future clinical summaries, decision support, and specialty assistants.</p><hr><p class="small mb-2"><i class="bi bi-shield-check me-2 text-success"></i>Human review remains authoritative</p><p class="small mb-0"><i class="bi bi-clock-history me-2 text-primary"></i>Recommendations will be auditable</p></div></section></div>
+</div>
+{% endblock %}

@@ -1,0 +1,1299 @@
+
+
+# Intelligent Health Information System (iHIS) – Full Stack Development Prompt
+
+Act as a senior healthcare software architect, Python developer, UI/UX designer, database architect, cybersecurity specialist, and AI healthcare systems engineer.
+
+Build a production-ready Intelligent Health Information System (iHIS) using:
+
+- Backend: Python Flask
+- Database: SQLite with easy migration path to PostgreSQL/MySQL
+- Frontend: HTML5, Bootstrap 5, JavaScript
+- ORM: SQLAlchemy
+- Authentication: Flask-Login
+- Security: RBAC, password hashing, audit logging
+- API: RESTful APIs
+- Architecture: Modular and scalable
+- Future AI Integration Layer
+
+The system must be designed so that future AI modules can easily assist doctors, laboratories, radiology departments, pharmacists, nurses, and administrators.
+
+---
+
+# Main Goal
+
+Develop a centralized digital healthcare ecosystem connecting:
+
+1. Patients
+2. Doctors of all specialties
+3. Laboratories
+4. Radiology Centers
+5. Nurses
+6. Receptionists
+7. Pharmacists
+8. Hospital Administration
+9. System Administrators
+
+through a unified dashboard.
+
+---
+
+# User Roles
+
+---
+
+# Patient Portal
+
+## Features
+
+- Patient registration
+- Secure login
+- Personal profile
+- Medical history
+- Allergies
+- Chronic diseases
+- Vaccination records
+- Appointment booking
+- Appointment tracking
+- View prescriptions
+- Download reports
+- View lab results
+- View radiology reports
+- Medical documents upload
+- Online messaging with doctors
+- Notifications
+- Health dashboard
+
+## Dashboard Widgets
+
+- Upcoming appointments
+- Recent lab results
+- Active medications
+- Health alerts
+- AI health insights placeholder
+
+---
+
+# Doctor Portal
+
+## Supported Specialties
+
+Support all specialties:
+
+- Internal Medicine
+- Cardiology
+- Neurology
+- Pediatrics
+- Orthopedics
+- Surgery
+- ENT
+- Dermatology
+- Psychiatry
+- Ophthalmology
+- Oncology
+- obstetrics and Gynecology
+- Urology
+- Endocrinology
+- Gastroenterology
+- Pulmonology
+- Nephrology
+- Family Medicine
+- Emergency Medicine
+- Custom specialties
+
+## Features
+
+- Patient search
+- Electronic Medical Records (EMR)
+- SOAP notes
+- Diagnosis management
+- ICD-10 coding support
+- Prescription management
+- Treatment plans
+- Follow-up scheduling
+- Lab order requests
+- Radiology requests
+- Clinical notes
+- Medical attachments
+- Digital signature
+
+## Dashboard Widgets
+
+- Today's appointments
+- Pending reports
+- Follow-up reminders
+- Critical patients
+- AI Clinical Assistant Placeholder
+
+---
+
+# Women's Health Extension Module (OB/GYN)
+
+In addition to the standard EMR, implement a comprehensive Women's Health Module fully integrated with the central Electronic Medical Record (EMR).
+
+The module must support complete Obstetrics, Gynecology, Infertility, Fetal Medicine, and Women's Imaging workflows while maintaining compatibility with all existing hospital modules.
+
+This module must extend the Doctor Portal and central EMR without changing or breaking the general hospital HIS architecture.
+
+---
+
+## Supported Women's Health Specialties
+
+- General Obstetrics
+- High-Risk Pregnancy
+- Maternal-Fetal Medicine
+- Gynecology
+- Reproductive Endocrinology & Infertility
+- Family Planning
+- Gynecologic Oncology
+- Urogynecology
+- Minimally Invasive Gynecologic Surgery
+- Menopause Clinic
+
+---
+
+## Patient Journey Architecture
+
+The Women's Health Module must organize patient care into clinical journeys rather than isolated visits.
+
+Supported Journeys:
+
+- Pregnancy Journey
+- Gynecology Journey
+- Infertility Journey
+
+Each journey maintains its own visits, investigations, imaging, procedures, medications, and outcomes while remaining linked to the patient's unified EMR.
+
+The system must preserve a patient-centric longitudinal record across:
+
+- Previous pregnancies
+- Deliveries
+- Cesarean sections
+- Miscarriages
+- Gynecologic conditions
+- Infertility cycles
+- Surgeries
+- Procedures
+- Investigations
+- Imaging
+- Follow-up visits
+
+---
+
+## Pregnancy Module
+
+Support:
+
+- Booking Visit
+- Antenatal Care (ANC)
+- High-Risk Pregnancy
+- Multiple Pregnancy
+- Diabetes in Pregnancy
+- Hypertensive Disorders
+- Fetal Growth Monitoring
+- Doppler Follow-up
+- CTG Monitoring
+- Delivery Planning
+- Labour Assessment
+- Vaginal Delivery Documentation
+- Cesarean Section Documentation
+- Postpartum Follow-up
+- Lactation Follow-up
+
+Pregnancy records must include:
+
+- Gravidity
+- Parity
+- GTPAL/GPAL
+- LMP
+- EDD
+- Gestational age
+- Pregnancy risk category
+- Current pregnancy status
+- Maternal conditions
+- Fetal conditions
+- Delivery plan
+- Pregnancy outcome
+
+---
+
+## Gynecology Module
+
+Support:
+
+- Menstrual Disorders
+- Abnormal Uterine Bleeding
+- Pelvic Pain
+- Fibroids
+- Adenomyosis
+- Endometriosis
+- Ovarian Cysts
+- PCOS
+- Cervical Disease
+- Colposcopy
+- Menopause
+- Contraception
+- Gynecologic Procedures
+- Laparoscopy
+- Hysteroscopy
+- Oncology Follow-up
+- Postoperative Follow-up
+
+---
+
+## Infertility Module
+
+Support:
+
+- Couple Evaluation
+- Partner Record
+- Ovulation Induction
+- Timed Intercourse
+- IUI Cycles
+- IVF Referral
+- ICSI Referral
+- Frozen Embryo Transfer Follow-up
+- Follicular Monitoring
+- Hormonal Monitoring
+- Medication Protocols
+- Trigger Documentation
+- Luteal Support
+- Pregnancy Outcome Tracking
+- Cancelled Cycle Tracking
+
+Infertility records must support:
+
+- Primary infertility
+- Secondary infertility
+- Duration of infertility
+- Female factor
+- Male factor
+- Combined factor
+- Unexplained infertility
+- Previous cycles
+- Cycle outcome
+
+---
+
+## Partner Record
+
+Each infertility case must support an independent partner profile linked to the female patient.
+
+Partner information includes:
+
+- Demographics
+- Age
+- Occupation
+- Smoking status
+- Fertility history
+- Semen analysis
+- Hormonal investigations
+- Previous procedures
+- Previous surgeries
+- Current medications
+- Linked infertility cycles
+- Linked investigations
+
+---
+
+## Women's Ultrasound Module
+
+Implement structured ultrasound documentation supporting:
+
+- Transabdominal Ultrasound
+- Transvaginal Ultrasound
+- 3D Ultrasound
+- 4D Ultrasound
+- Folliculometry
+- Early Pregnancy Scan
+- NT Scan
+- Anomaly Scan
+- Growth Scan
+- Doppler Assessment
+- Cervical Length
+- Placental Assessment
+- Amniotic Fluid Assessment
+- Biophysical Profile
+- Gynecologic Ultrasound
+- Ovarian Assessment
+- Uterine Assessment
+- Adnexal Assessment
+- Image Attachments
+- Video Attachments
+- Structured Measurements
+
+The ultrasound module must support structured reporting and linkage to:
+
+- Patient
+- Visit
+- Pregnancy Journey
+- Infertility Journey
+- Gynecology Journey
+- Radiology module when applicable
+
+---
+
+## Visit Types
+
+Women's Health visits must support:
+
+- Obstetric Visit
+- Gynecology Visit
+- Infertility Visit
+- Ovulation Induction Visit
+- IUI Visit
+- Procedure Visit
+- Emergency Visit
+- Postoperative Follow-up
+- Postpartum Follow-up
+- Telemedicine Visit
+
+---
+
+## Women's Health Dashboard
+
+Display:
+
+- Current Clinical Journey
+- Pregnancy Status
+- Current Gestational Age
+- Active Infertility Cycle
+- Current Cycle Day
+- Recent Ultrasound
+- Pending Investigations
+- Current Medications
+- Risk Factors
+- Timeline of Women's Health Events
+- Follow-up Recommendations
+- AI Women's Health Summary Placeholder
+
+---
+
+## Clinical Calculators
+
+Include integrated calculators for:
+
+- Estimated Due Date (EDD)
+- Gestational Age (GA)
+- BMI
+- GTPAL/GPAL
+- Bishop Score
+- Modified Bishop Score
+- Estimated Fetal Weight
+- Amniotic Fluid Index (AFI)
+- Single Deepest Pocket
+- Cerebroplacental Ratio (CPR)
+- Umbilical Artery Doppler
+- Middle Cerebral Artery Doppler
+- Cycle Day
+- Ovulation Window
+- Follicle Growth Tracking
+
+---
+
+## Women's Health AI Integration
+
+Prepare AI service interfaces for:
+
+- AI Obstetric Assistant
+- AI Gynecology Assistant
+- AI Infertility Assistant
+- AI Ultrasound Assistant
+- AI Fetal Medicine Assistant
+- AI Pregnancy Risk Prediction
+- AI Clinical Summary Generator
+- AI Follow-up Recommendation Engine
+- AI Medication Safety in Pregnancy
+- AI Infertility Cycle Summary
+- AI Timeline Generator
+
+Example placeholder:
+
+```python
+class AIObstetricAssistant:
+    def analyze_pregnancy(self, pregnancy_id):
+        pass
+
+    def predict_pregnancy_risk(self, pregnancy_id):
+        pass
+
+    def recommend_follow_up(self, patient_id):
+        pass
+```
+
+```python
+class AIInfertilityAssistant:
+    def summarize_cycle(self, cycle_id):
+        pass
+
+    def analyze_partner_record(self, partner_id):
+        pass
+
+    def recommend_next_step(self, patient_id):
+        pass
+```
+
+The Women's Health Module must remain fully integrated with the central EMR while preserving a patient-centric longitudinal clinical history across all pregnancies, gynecologic conditions, infertility cycles, procedures, investigations, and follow-up visits.
+
+---
+
+# Laboratory Portal
+
+## Features
+
+- Receive test orders
+- Sample collection
+- Sample tracking
+- Test processing
+- Result entry
+- Result validation
+- PDF report generation
+- Abnormal value alerts
+- Quality control tracking
+
+## Supported Tests
+
+- CBC
+- HbA1c
+- Lipid Profile
+- Liver Function
+- Kidney Function
+- Thyroid Profile
+- Coagulation
+- Microbiology
+- Pathology
+- Custom Tests
+
+## Dashboard Widgets
+
+- Pending samples
+- Completed tests
+- Critical values
+- AI Lab Interpretation Placeholder
+
+---
+
+# Radiology Portal
+
+## Features
+
+- Receive imaging requests
+- Schedule scans
+- Upload images
+- Report writing
+- Digital radiology reports
+- DICOM-ready structure
+- Attach image links
+
+## Supported Imaging
+
+- X-Ray
+- CT
+- MRI
+- Ultrasound
+- Mammography
+- PET Scan
+- Echocardiography
+
+## Dashboard Widgets
+
+- Pending studies
+- Reporting queue
+- Critical findings
+- AI Radiology Assistant Placeholder
+
+---
+
+# Pharmacy Portal
+
+## Features
+
+- Prescription verification
+- Dispensing management
+- Drug inventory
+- Medication tracking
+- Drug interaction alerts
+- Refill management
+
+## Dashboard Widgets
+
+- Pending prescriptions
+- Low stock alerts
+- Dispensed medications
+
+---
+
+# Dentistry Portal
+
+The system must include a complete Dental Information Management Module integrated with the central EMR.
+
+## Supported Dental Specialties
+
+- General Dentistry
+- Orthodontics
+- Prosthodontics
+- Endodontics
+- Periodontics
+- Oral Surgery
+- Pediatric Dentistry
+- Cosmetic Dentistry
+- Implantology
+- Oral Medicine
+- Maxillofacial Surgery
+
+## Patient Dental Record
+
+- Dental history
+- Dental allergies
+- Previous procedures
+- Tooth-specific records
+- Dental charting
+- Periodontal charting
+- Treatment plans
+- Progress notes
+- Before/after images
+
+## Dental Charting
+
+Interactive tooth chart supporting:
+
+- Missing teeth
+- Caries
+- Fillings
+- Crowns
+- Bridges
+- Implants
+- Root canal treatments
+- Extractions
+- Orthodontic appliances
+- Periodontal status
+
+Support Universal, FDI, and Palmer numbering systems.
+
+## Clinical Features
+
+- Dental examination
+- Treatment planning
+- Procedure documentation
+- Digital consent forms
+- Dental imaging management
+- Referral management
+- Follow-up scheduling
+
+## Dental Imaging
+
+Support:
+
+- Periapical X-rays
+- Bitewing X-rays
+- Panoramic X-rays
+- CBCT
+- Intraoral photos
+- Extraoral photos
+- 3D scans
+
+## Procedure Management
+
+Track:
+
+- Fillings
+- Root canals
+- Extractions
+- Crowns
+- Bridges
+- Dentures
+- Implants
+- Scaling and polishing
+- Orthodontic treatments
+- Surgical procedures
+
+## Dentistry Dashboard Widgets
+
+- Today's appointments
+- Pending treatment plans
+- Active orthodontic cases
+- Implant cases
+- Follow-up patients
+- AI Dental Assistant Placeholder
+
+---
+
+# Physical Therapy & Rehabilitation Portal
+
+The system must include a comprehensive Physical Therapy and Rehabilitation Information System.
+
+## Supported Rehabilitation Specialties
+
+- Physical Therapy
+- Sports Rehabilitation
+- Neurological Rehabilitation
+- Orthopedic Rehabilitation
+- Pediatric Rehabilitation
+- Geriatric Rehabilitation
+- Cardiac Rehabilitation
+- Pulmonary Rehabilitation
+- Occupational Therapy
+- Speech Therapy
+- Pain Management
+
+## Patient Assessment
+
+### Initial Evaluation
+
+- Functional assessment
+- Mobility assessment
+- Pain assessment
+- Muscle strength testing
+- Balance assessment
+- Range of motion measurements
+- Posture evaluation
+- Gait analysis
+
+## Clinical Documentation
+
+- SOAP notes
+- Rehabilitation goals
+- Treatment plans
+- Progress notes
+- Outcome measurements
+- Discharge summaries
+
+## Treatment Management
+
+Support:
+
+- Manual therapy
+- Therapeutic exercise
+- Strength training
+- Balance training
+- Gait training
+- Neuromuscular re-education
+- Electrotherapy
+- Ultrasound therapy
+- Hydrotherapy
+- Sports rehabilitation
+- Occupational therapy interventions
+
+## Scheduling
+
+- Therapy sessions
+- Group sessions
+- Home exercise programs
+- Follow-up visits
+
+## Exercise Management
+
+Create exercise library with:
+
+- Images
+- Videos
+- Instructions
+- Repetitions
+- Duration
+- Progression plans
+
+## Progress Tracking
+
+Track:
+
+- Pain scores
+- Mobility improvements
+- Strength gains
+- Functional outcomes
+- Range of motion
+- Balance scores
+- Therapy compliance
+
+## Rehabilitation Dashboard Widgets
+
+- Today's sessions
+- Active rehabilitation plans
+- Progress indicators
+- High-risk patients
+- Discharge readiness
+- AI Rehabilitation Assistant Placeholder
+
+## Home Exercise Portal
+
+Patients can:
+
+- View exercises
+- Watch instructional videos
+- Track compliance
+- Report symptoms
+- Communicate with therapists
+
+## Future AI Rehabilitation Module
+
+Create placeholders for:
+
+```python
+class AIRehabilitationAssistant:
+    def analyze_progress(self):
+        pass
+
+    def recommend_exercises(self):
+        pass
+
+    def predict_recovery(self):
+        pass
+
+    def optimize_treatment_plan(self):
+        pass
+```
+
+Capabilities:
+
+- Recovery prediction
+- Personalized exercise recommendations
+- Progress analysis
+- Treatment optimization
+- Fall risk prediction
+
+---
+
+# Nursing Portal
+
+## Features
+
+- Vital signs recording
+- Medication administration
+- Nursing notes
+- Patient monitoring
+- Care plans
+
+## Dashboard Widgets
+
+- Assigned patients
+- Medication schedules
+- Critical alerts
+
+---
+
+# Reception Portal
+
+## Features
+
+- Appointment scheduling
+- Registration
+- Queue management
+- Check-in
+- Billing initiation
+
+## Dashboard Widgets
+
+- Daily appointments
+- Waiting patients
+- Check-in status
+
+---
+
+# Administration Portal
+
+## Features
+
+- Staff management
+- Department management
+- Resource allocation
+- Reports
+- Hospital statistics
+- KPI dashboards
+
+## Dashboard Widgets
+
+- Patient volumes
+- Revenue overview
+- Department performance
+- Operational metrics
+
+---
+
+# Super Admin Portal
+
+Full system control:
+
+- User management
+- Role management
+- Permissions
+- Audit logs
+- System configuration
+- Database backup
+- Restore
+- Security monitoring
+
+## Dashboard Widgets
+
+- Active users
+- System health
+- Security alerts
+- Error logs
+
+---
+
+# Electronic Medical Record (EMR)
+
+Patient EMR must include:
+
+- Demographics
+- Visit history
+- Diagnoses
+- Medications
+- Allergies
+- Procedures
+- Lab results
+- Radiology reports
+- Vital signs
+- Clinical notes
+- Uploaded documents
+- Women's Health records when applicable
+- Dental records when applicable
+- Rehabilitation records when applicable
+
+---
+
+# AI Ready Architecture
+
+Design a dedicated AI Layer:
+
+```text
+/services/ai/
+```
+
+Future modules:
+
+- AI Clinical Assistant
+- AI Diagnosis Support
+- AI Prescription Checker
+- AI Drug Interaction Engine
+- AI Laboratory Interpretation
+- AI Radiology Assistant
+- AI Patient Risk Prediction
+- AI Appointment Optimization
+- AI Medical Coding Assistant
+- AI Hospital Analytics
+- AI Obstetric Assistant
+- AI Gynecology Assistant
+- AI Infertility Assistant
+- AI Ultrasound Assistant
+- AI Fetal Medicine Assistant
+- AI Pregnancy Risk Prediction
+- AI Clinical Summary Generator
+- AI Follow-up Recommendation Engine
+
+Create interfaces and placeholder APIs now.
+
+Example:
+
+```python
+class AIClinicalAssistant:
+    def analyze_patient(self, patient_id):
+        pass
+```
+
+---
+
+# Database Design
+
+Create normalized SQLite schema.
+
+## Core Tables
+
+- users
+- roles
+- permissions
+- patients
+- doctors
+- specialties
+- appointments
+- medical_records
+- diagnoses
+- prescriptions
+- medications
+- lab_orders
+- lab_results
+- radiology_orders
+- radiology_reports
+- vital_signs
+- nursing_notes
+- pharmacy_inventory
+- departments
+- notifications
+- messages
+- audit_logs
+- ai_recommendations
+- system_settings
+- dentists
+- dental_specialties
+- dental_records
+- dental_charts
+- dental_procedures
+- dental_images
+- orthodontic_cases
+- physical_therapists
+- therapy_assessments
+- therapy_sessions
+- therapy_plans
+- therapy_exercises
+- exercise_library
+- rehabilitation_progress
+- functional_outcomes
+- referrals
+- care_teams
+- multidisciplinary_cases
+
+## Women's Health Tables
+
+Add the following tables for the Women's Health Extension Module:
+
+- womens_health_profiles
+- pregnancies
+- pregnancy_visits
+- antenatal_visits
+- obstetric_history
+- delivery_records
+- postpartum_visits
+- gynecology_journeys
+- gynecology_visits
+- infertility_journeys
+- infertility_cycles
+- partner_records
+- semen_analyses
+- folliculometry_records
+- follicle_measurements
+- ovulation_induction_cycles
+- iui_cycles
+- fertility_medication_protocols
+- womens_ultrasound_reports
+- fetal_biometry
+- fetal_doppler_records
+- gynecology_ultrasound_records
+- pregnancy_risk_flags
+- womens_health_calculations
+- womens_health_timeline_events
+
+## Database Requirements
+
+Include:
+
+- Foreign keys
+- Indexes
+- Soft delete support
+- Created/Updated timestamps
+- Relationship mapping between central EMR and specialty modules
+- Migration-ready structure for PostgreSQL/MySQL
+- Multi-tenant ready structure for future upgrades
+
+---
+
+# Security Requirements
+
+Implement:
+
+- RBAC
+- Password hashing
+- Session management
+- CSRF protection
+- Input validation
+- Audit trail
+- Activity logging
+- Secure file uploads
+- Data encryption preparation layer
+- Role-based access to specialty records
+- Healthcare compliance-ready structure
+
+---
+
+# Dashboard Requirements
+
+Modern responsive dashboard:
+
+- Bootstrap 5
+- Sidebar navigation
+- Role-based menus
+- Charts using Chart.js
+- Cards
+- Notifications
+- Search bar
+- Dark mode
+- Mobile responsive
+
+Dashboards must be modular and role-specific for:
+
+- Patient
+- Doctor
+- Women's Health Doctor
+- Laboratory
+- Radiology
+- Pharmacy
+- Dentistry
+- Rehabilitation
+- Nursing
+- Reception
+- Administration
+- Super Admin
+
+---
+
+# Reports
+
+Generate:
+
+- PDF reports
+- Appointment reports
+- Lab reports
+- Radiology reports
+- Prescription reports
+- Administrative reports
+- Women's Health reports
+- Pregnancy reports
+- Ultrasound reports
+- Infertility cycle reports
+- Dental reports
+- Rehabilitation reports
+
+---
+
+# Notifications
+
+Support:
+
+- In-app notifications
+- Email notifications
+- SMS-ready integration layer
+- Critical medical alerts
+- Appointment reminders
+- Lab result notifications
+- Radiology result notifications
+- Women's Health follow-up reminders
+- Pregnancy follow-up reminders
+- Infertility cycle reminders
+
+---
+
+# File Structure
+
+```text
+project_root/
+│
+├── app.py
+├── config.py
+│
+├── models/
+│   ├── user.py
+│   ├── patient.py
+│   ├── doctor.py
+│   ├── emr.py
+│   ├── laboratory.py
+│   ├── radiology.py
+│   ├── pharmacy.py
+│   ├── dentistry.py
+│   ├── rehabilitation.py
+│   └── womens_health.py
+│
+├── routes/
+│   ├── auth_routes.py
+│   ├── patient_routes.py
+│   ├── doctor_routes.py
+│   ├── emr_routes.py
+│   ├── laboratory_routes.py
+│   ├── radiology_routes.py
+│   ├── pharmacy_routes.py
+│   ├── dentistry_routes.py
+│   ├── rehabilitation_routes.py
+│   └── womens_health_routes.py
+│
+├── services/
+│   ├── ai/
+│   │   ├── clinical_assistant.py
+│   │   ├── lab_interpretation.py
+│   │   ├── radiology_assistant.py
+│   │   ├── obstetric_assistant.py
+│   │   ├── gynecology_assistant.py
+│   │   ├── infertility_assistant.py
+│   │   └── ultrasound_assistant.py
+│   │
+│   ├── laboratory/
+│   ├── radiology/
+│   ├── pharmacy/
+│   ├── dentistry/
+│   ├── rehabilitation/
+│   └── womens_health/
+│       ├── pregnancy_service.py
+│       ├── gynecology_service.py
+│       ├── infertility_service.py
+│       ├── partner_service.py
+│       ├── ultrasound_service.py
+│       └── womens_health_calculators.py
+│
+├── templates/
+│   ├── dashboard/
+│   ├── auth/
+│   ├── patients/
+│   ├── doctors/
+│   ├── laboratory/
+│   ├── radiology/
+│   ├── pharmacy/
+│   ├── dentistry/
+│   ├── rehabilitation/
+│   └── womens_health/
+│       ├── pregnancy/
+│       ├── gynecology/
+│       ├── infertility/
+│       └── ultrasound/
+│
+├── static/
+│   ├── css/
+│   ├── js/
+│   └── uploads/
+│
+├── dashboard/
+├── auth/
+├── reports/
+├── uploads/
+├── migrations/
+├── tests/
+│   ├── test_auth.py
+│   ├── test_patients.py
+│   ├── test_emr.py
+│   ├── test_womens_health.py
+│   ├── test_laboratory.py
+│   ├── test_radiology.py
+│   └── test_pharmacy.py
+│
+└── database/
+```
+
+---
+
+# API Endpoint Requirements
+
+Generate RESTful APIs for:
+
+- Authentication
+- User management
+- Role management
+- Patient management
+- Doctor management
+- Appointment management
+- EMR management
+- Laboratory orders and results
+- Radiology orders and reports
+- Pharmacy prescriptions and inventory
+- Dentistry records
+- Rehabilitation records
+- Nursing notes
+- Notifications
+- Reports
+- AI placeholder services
+
+## Women's Health APIs
+
+Create endpoints for:
+
+- Pregnancy journeys
+- Pregnancy visits
+- Antenatal follow-up
+- Delivery records
+- Postpartum visits
+- Gynecology journeys
+- Gynecology visits
+- Infertility journeys
+- Infertility cycles
+- Partner records
+- Semen analysis
+- Folliculometry
+- IUI cycles
+- Women's ultrasound reports
+- Fetal biometry
+- Doppler records
+- Women's health calculations
+- Women's health timeline
+- AI Women's Health summary
+
+---
+
+# Development Requirements
+
+Generate:
+
+- Complete Flask application
+- SQLAlchemy models
+- Database migrations
+- Authentication system
+- CRUD operations
+- REST APIs
+- Sample seed data
+- Bootstrap dashboards
+- Modular architecture
+- Error handling
+- Logging
+- Unit tests
+- Documentation
+- API endpoint documentation
+- Database schema diagrams
+
+---
+
+# Future Upgrade Requirements
+
+System must be designed to support:
+
+- PostgreSQL migration
+- Multi-hospital deployment
+- Multi-tenant architecture
+- AI integration
+- HL7/FHIR interoperability
+- DICOM integration
+- Telemedicine
+- Mobile applications
+- Wearable devices integration
+- National healthcare systems integration
+
+---
+
+# Generate the Complete Project in Phases
+
+1. Architecture Design
+2. Database Models
+3. Authentication System
+4. User Management
+5. EMR Module
+6. Appointment Module
+7. Women's Health Extension Module
+8. Laboratory Module
+9. Radiology Module
+10. Pharmacy Module
+11. Dentistry Module
+12. Physical Therapy & Rehabilitation Module
+13. Nursing Module
+14. Reception Module
+15. Administration Module
+16. Dashboard UI
+17. Reporting System
+18. AI Integration Layer
+19. Testing
+20. Deployment
+
+---
+
+# Output Requirements
+
+Provide clean, production-quality code with:
+
+- Comments
+- Documentation
+- API endpoints
+- Database schema diagrams
+- Scalable architecture
+- Modular file structure
+- Security best practices
+- Sample seed data
+- Unit tests
+- Production-ready error handling
+- Logging
+- Migration-ready database design
+
+The final system must be suitable for a hospital, clinic, or national healthcare information system while supporting advanced Women's Health workflows as an integrated extension of the central EMR.
+"""
+
+

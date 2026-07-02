@@ -1,0 +1,21 @@
+:root { --sidebar-width: 17rem; }
+body { min-height: 100vh; background: var(--bs-tertiary-bg); }
+.navbar { min-height: 4rem; }
+.brand-mark { color: var(--bs-primary); font-style: italic; }
+.sidebar { width: var(--sidebar-width) !important; padding-top: 4rem; background: var(--bs-body-bg); }
+.sidebar .offcanvas-body { display: block; }
+.sidebar .nav-link { color: var(--bs-body-color); }
+.sidebar .nav-link.disabled { opacity: .64; }
+.sidebar-note, .empty-state { background: var(--bs-tertiary-bg); }
+.main-content { padding-top: 4rem; }
+.metric-card, .ai-card { transition: transform .2s ease; }
+.metric-card:hover { transform: translateY(-2px); }
+.metric-icon { display: grid; place-items: center; width: 2.75rem; height: 2.75rem; border-radius: .8rem; color: var(--bs-primary); background: rgba(var(--bs-primary-rgb), .12); font-size: 1.2rem; }
+.empty-state { min-height: 17rem; }
+.ai-card { background: linear-gradient(145deg, var(--bs-body-bg), rgba(var(--bs-primary-rgb), .08)); }
+@media (min-width: 992px) { .sidebar { position: fixed; inset: 0 auto 0 0; visibility: visible !important; transform: none !important; } .main-content { margin-left: var(--sidebar-width); } }
+@media (max-width: 991.98px) { .sidebar { padding-top: 0; } }
+.auth-body { min-height: 100vh; background: radial-gradient(circle at top, rgba(var(--bs-primary-rgb), .15), transparent 40%), var(--bs-tertiary-bg); }
+.auth-shell { max-width: 42rem; }
+.auth-icon, .profile-avatar { display: inline-grid; place-items: center; width: 3.5rem; height: 3.5rem; border-radius: 1rem; color: var(--bs-primary); background: rgba(var(--bs-primary-rgb), .12); font-size: 1.5rem; }
+.profile-avatar { width: 4rem; height: 4rem; border-radius: 50%; }
