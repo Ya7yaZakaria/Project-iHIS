@@ -216,6 +216,7 @@ from services.rehabilitation_service import (
     RehabilitationServiceError,
     activate_therapy_plan,
     add_therapy_session,
+    build_patient_rehabilitation_summary,
     build_rehabilitation_progress,
     calculate_pain_change,
     complete_therapy_session,
@@ -228,7 +229,7 @@ from services.rehabilitation_service import (
     update_exercise,
     update_rehabilitation_record,
 )
-
+from services.emr_service import build_patient_timeline
 
 def test_rehabilitation_service_create_and_update_record(session):
     patient = _patient(session, "service-record")
@@ -454,3 +455,134 @@ def test_rehabilitation_routes_are_registered(app):
         ]
 
         assert rule in endpoint_rules
+
+def test_rehabilitation_patient_summary_without_records(session):
+    patient = _patient(session, "summary-empty")
+
+    summary = build_patient_rehabilitation_summary(patient)
+
+    assert summary["has_rehabilitation"] is False
+    assert summary["latest_record"] is None
+    assert summary["current_plan"] is None
+    assert summary["latest_assessment"] is None
+    assert summary["latest_session"] is None
+    assert summary["progress"] is None
+
+
+def test_rehabilitation_patient_summary_with_active_record_plan_and_session(session):
+    record = _record(session, "summary-active")
+    therapist = _therapist(session, "summary-active")
+
+    assessment = create_initial_assessment(
+        rehabilitation_record_id=record.id,
+        assessment_date=date.today(),
+        functional_score=80,
+        assessment_summary="Improving function",
+    )
+
+    plan = create_therapy_plan(
+        rehabilitation_record_id=record.id,
+        patient_id=record.patient_id,
+        therapist_id=therapist.id,
+        plan_name="Active rehab plan",
+        start_date=date.today(),
+        goals=["Improve mobility"],
+    )
+
+    therapy_session = add_therapy_session(
+        therapy_plan_id=plan.id,
+        patient_id=record.patient_id,
+        therapist_id=therapist.id,
+        scheduled_start=datetime.now(timezone.utc),
+        pain_before=7,
+        pain_after=4,
+    )
+
+    complete_therapy_session(therapy_session)
+
+    summary = build_patient_rehabilitation_summary(record.patient)
+
+    assert summary["has_rehabilitation"] is True
+    assert summary["latest_record"].id == record.id
+    assert summary["current_plan"].id == plan.id
+    assert summary["latest_assessment"].id == assessment.id
+    assert summary["latest_session"].id == therapy_session.id
+    assert summary["progress"]["latest_pain_score"] == 4
+    assert summary["progress"]["latest_functional_score"] == 80
+
+
+def test_emr_timeline_includes_rehabilitation_record(session):
+    record = _record(session, "timeline-record")
+
+    timeline = build_patient_timeline(record.patient)
+
+    rehab_events = [
+        event
+        for event in timeline
+        if event["kind"] == "rehabilitation_record"
+    ]
+
+    assert len(rehab_events) == 1
+    assert rehab_events[0]["object"].id == record.id
+    assert rehab_events[0]["title"] == record.rehabilitation_diagnosis
+
+
+def test_emr_timeline_includes_therapy_plan_and_session_events(session):
+    record = _record(session, "timeline-plan-session")
+    therapist = _therapist(session, "timeline-plan-session")
+
+    plan = create_therapy_plan(
+        rehabilitation_record_id=record.id,
+        patient_id=record.patient_id,
+        therapist_id=therapist.id,
+        plan_name="Timeline rehab plan",
+        start_date=date.today(),
+        goals=["Improve function"],
+    )
+
+    therapy_session = add_therapy_session(
+        therapy_plan_id=plan.id,
+        patient_id=record.patient_id,
+        therapist_id=therapist.id,
+        scheduled_start=datetime.now(timezone.utc),
+        pain_before=6,
+        pain_after=4,
+        progress_notes="Timeline therapy session",
+    )
+
+    timeline = build_patient_timeline(record.patient)
+
+    plan_events = [
+        event
+        for event in timeline
+        if event["kind"] == "therapy_plan"
+    ]
+
+    session_events = [
+        event
+        for event in timeline
+        if event["kind"] == "therapy_session"
+    ]
+
+    assert len(plan_events) == 1
+    assert plan_events[0]["object"].id == plan.id
+    assert plan_events[0]["title"] == "Timeline rehab plan"
+
+    assert len(session_events) == 1
+    assert session_events[0]["object"].id == therapy_session.id
+    assert session_events[0]["title"] == "Timeline therapy session"
+    
+def test_emr_timeline_includes_rehabilitation_record(session):
+    record = _record(session, "timeline-record")
+
+    timeline = build_patient_timeline(record.patient)
+
+    rehab_events = [
+        event
+        for event in timeline
+        if event["kind"] == "rehabilitation_record"
+    ]
+
+    assert len(rehab_events) == 1
+    assert rehab_events[0]["object"].id == record.id
+    assert rehab_events[0]["title"] == record.rehabilitation_diagnosis

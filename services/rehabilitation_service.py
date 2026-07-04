@@ -279,3 +279,56 @@ def build_rehabilitation_progress(record):
         ),
         "latest_assessment_id": latest_assessment.id if latest_assessment else None,
     }
+def build_patient_rehabilitation_summary(patient):
+    _validate_required(getattr(patient, "id", None), "patient_id")
+
+    records = get_patient_rehabilitation_records(patient.id)
+
+    if not records:
+        return {
+            "has_rehabilitation": False,
+            "latest_record": None,
+            "current_plan": None,
+            "latest_assessment": None,
+            "latest_session": None,
+            "progress": None,
+        }
+
+    latest_record = records[0]
+
+    current_plan = (
+        TherapyPlan.query
+        .filter_by(patient_id=patient.id, active=True)
+        .order_by(TherapyPlan.start_date.desc(), TherapyPlan.created_at.desc())
+        .first()
+    )
+
+    latest_assessment = (
+        RehabilitationAssessment.query
+        .join(RehabilitationRecord)
+        .filter(RehabilitationRecord.patient_id == patient.id)
+        .order_by(
+            RehabilitationAssessment.assessment_date.desc(),
+            RehabilitationAssessment.created_at.desc(),
+        )
+        .first()
+    )
+
+    latest_session = (
+        TherapySession.query
+        .filter_by(patient_id=patient.id)
+        .order_by(
+            TherapySession.scheduled_start.desc(),
+            TherapySession.created_at.desc(),
+        )
+        .first()
+    )
+
+    return {
+        "has_rehabilitation": True,
+        "latest_record": latest_record,
+        "current_plan": current_plan,
+        "latest_assessment": latest_assessment,
+        "latest_session": latest_session,
+        "progress": build_rehabilitation_progress(latest_record),
+    }

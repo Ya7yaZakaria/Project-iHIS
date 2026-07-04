@@ -1,1 +1,169 @@
-{% extends 'base.html' %}{% block title %}EMR · {{ patient.first_name }} {{ patient.last_name }}{% endblock %}{% block content %}<div class="d-flex flex-wrap justify-content-between mb-4"><div><p class="text-primary fw-semibold mb-1">CENTRAL EMR · {{ patient.medical_record_number }}</p><h1 class="h2">{{ patient.first_name }} {{ patient.last_name }}</h1></div><div>{% if current_user.has_role('Doctor','Women’s Health Doctor') %}<a class="btn btn-primary" href="{{ url_for('emr.create_visit_route',patient_id=patient.id) }}">New visit</a>{% endif %}<a class="btn btn-outline-primary" href="{{ url_for('patients.attachments',patient_id=patient.id) }}">Documents</a></div></div><div class="row g-4"><div class="col-xl-4"><section class="card border-0 shadow-sm"><div class="card-body"><h2 class="h5">Clinical flags</h2><p><strong>Allergies:</strong> {{ patient.allergies|join(', ') if patient.allergies else 'None recorded' }}</p><p><strong>Chronic:</strong> {{ patient.chronic_conditions|join(', ') if patient.chronic_conditions else 'None recorded' }}</p><p class="mb-0"><strong>Women’s Health:</strong> {{ 'Linked profile available' if patient.womens_health_profile else 'No linked profile' }}</p></div></section></div><div class="col-xl-8">{% include 'emr/timeline.html' %}</div></div>{% endblock %}
+{% extends 'base.html' %}
+
+{% block title %}EMR · {{ patient.first_name }} {{ patient.last_name }}{% endblock %}
+
+{% block content %}
+
+<div class="d-flex flex-wrap justify-content-between mb-4">
+
+    <div>
+
+        <p class="text-primary fw-semibold mb-1">
+            CENTRAL EMR · {{ patient.medical_record_number }}
+        </p>
+
+        <h1 class="h2">
+            {{ patient.first_name }} {{ patient.last_name }}
+        </h1>
+
+    </div>
+
+    <div>
+
+        {% if current_user.has_role('Doctor','Women’s Health Doctor') %}
+
+            <a class="btn btn-primary"
+               href="{{ url_for('emr.create_visit_route', patient_id=patient.id) }}">
+                New visit
+            </a>
+
+        {% endif %}
+
+        <a class="btn btn-outline-primary"
+           href="{{ url_for('rehabilitation.patient_records', patient_id=patient.id) }}">
+            Rehabilitation
+        </a>
+
+        <a class="btn btn-outline-primary"
+           href="{{ url_for('patients.attachments', patient_id=patient.id) }}">
+            Documents
+        </a>
+
+    </div>
+
+</div>
+
+<div class="row g-4">
+
+    <div class="col-xl-4">
+
+        <section class="card border-0 shadow-sm mb-4">
+
+            <div class="card-body">
+
+                <h2 class="h5">Clinical flags</h2>
+
+                <p>
+                    <strong>Allergies:</strong>
+                    {{ patient.allergies|join(', ') if patient.allergies else 'None recorded' }}
+                </p>
+
+                <p>
+                    <strong>Chronic:</strong>
+                    {{ patient.chronic_conditions|join(', ') if patient.chronic_conditions else 'None recorded' }}
+                </p>
+
+                <p class="mb-0">
+                    <strong>Women’s Health:</strong>
+                    {{ 'Linked profile available' if patient.womens_health_profile else 'No linked profile' }}
+                </p>
+
+            </div>
+
+        </section>
+
+        <section class="card border-0 shadow-sm">
+
+            <div class="card-body">
+
+                <div class="d-flex justify-content-between align-items-start mb-3">
+
+                    <div>
+
+                        <h2 class="h5 mb-1">Rehabilitation</h2>
+
+                        <p class="text-muted mb-0">
+                            Current rehab status
+                        </p>
+
+                    </div>
+
+                    <a class="btn btn-sm btn-outline-primary"
+                       href="{{ url_for('rehabilitation.patient_records', patient_id=patient.id) }}">
+                        Open
+                    </a>
+
+                </div>
+
+                {% if rehabilitation_summary and rehabilitation_summary.has_rehabilitation %}
+
+                    <p class="mb-2">
+                        <strong>Current Plan:</strong>
+                        {% if rehabilitation_summary.current_plan %}
+                            {{ rehabilitation_summary.current_plan.plan_name or 'Active therapy plan' }}
+                        {% else %}
+                            No active plan
+                        {% endif %}
+                    </p>
+
+                    <p class="mb-2">
+                        <strong>Latest Assessment:</strong>
+                        {% if rehabilitation_summary.latest_assessment %}
+                            {{ rehabilitation_summary.latest_assessment.assessment_date }}
+                        {% else %}
+                            —
+                        {% endif %}
+                    </p>
+
+                    <p class="mb-2">
+                        <strong>Completed Sessions:</strong>
+                        {{ rehabilitation_summary.progress.completed_sessions }}
+                    </p>
+
+                    <p class="mb-3">
+                        <strong>Latest Pain Score:</strong>
+                        {{ rehabilitation_summary.progress.latest_pain_score if rehabilitation_summary.progress.latest_pain_score is not none else '—' }}
+                    </p>
+
+                    <div class="d-flex gap-2">
+
+                        <a class="btn btn-sm btn-primary"
+                           href="{{ url_for('rehabilitation.record_detail', record_id=rehabilitation_summary.latest_record.id) }}">
+                            Current Record
+                        </a>
+
+                        <a class="btn btn-sm btn-outline-primary"
+                           href="{{ url_for('rehabilitation.progress', record_id=rehabilitation_summary.latest_record.id) }}">
+                            Progress
+                        </a>
+
+                    </div>
+
+                {% else %}
+
+                    <p class="text-muted mb-3">
+                        No rehabilitation record yet.
+                    </p>
+
+                    <a class="btn btn-sm btn-primary"
+                       href="{{ url_for('rehabilitation.record_create', patient_id=patient.id) }}">
+                        Start Rehabilitation
+                    </a>
+
+                {% endif %}
+
+            </div>
+
+        </section>
+
+    </div>
+
+    <div class="col-xl-8">
+
+        {% include 'emr/timeline.html' %}
+
+    </div>
+
+</div>
+
+{% endblock %}

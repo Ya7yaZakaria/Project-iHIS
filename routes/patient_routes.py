@@ -13,7 +13,7 @@ from services.emr_service import (attachment_path, build_patient_timeline,
                                   create_patient, require_emr_access,
                                   search_patients, update_patient,
                                   upload_attachment)
-
+from services.rehabilitation_service import build_patient_rehabilitation_summary
 patient_bp = Blueprint("patients", __name__, url_prefix="/patients")
 
 
@@ -49,9 +49,25 @@ def create():
 @patient_bp.get("/<patient_id>")
 @login_required
 def detail(patient_id):
-    patient=_patient(patient_id)
-    if not can_view_demographics(current_user,patient): abort(403)
-    return render_template("patients/detail.html",patient=patient,can_open_emr=can_view_emr(current_user,patient,audit_denied=False))
+    patient = _patient(patient_id)
+
+    if not can_view_demographics(current_user, patient):
+        abort(403)
+
+    can_open_emr = can_view_emr(current_user, patient, audit_denied=False)
+
+    rehabilitation_summary = (
+        build_patient_rehabilitation_summary(patient)
+        if can_open_emr
+        else None
+    )
+
+    return render_template(
+        "patients/detail.html",
+        patient=patient,
+        can_open_emr=can_open_emr,
+        rehabilitation_summary=rehabilitation_summary,
+    )
 
 
 @patient_bp.route("/<patient_id>/edit",methods=["GET","POST"])
@@ -71,23 +87,63 @@ def edit(patient_id):
 @patient_bp.get("/<patient_id>/emr")
 @login_required
 def emr_dashboard(patient_id):
-    patient=_patient(patient_id)
-    try: require_emr_access(current_user,patient)
-    except PermissionError: abort(403)
-    log_auth_event("emr.viewed",actor=current_user,details={"patient_id":patient.id}); db.session.commit()
-    timeline=build_patient_timeline(patient,signed_womens_health_only=current_user.has_role("Patient"))
-    return render_template("emr/dashboard.html",patient=patient,timeline=timeline)
+    patient = _patient(patient_id)
+
+    try:
+        require_emr_access(current_user, patient)
+    except PermissionError:
+        abort(403)
+
+    log_auth_event(
+        "emr.viewed",
+        actor=current_user,
+        details={"patient_id": patient.id},
+    )
+    db.session.commit()
+
+    timeline = build_patient_timeline(
+        patient,
+        signed_womens_health_only=current_user.has_role("Patient"),
+    )
+
+    rehabilitation_summary = build_patient_rehabilitation_summary(patient)
+
+    return render_template(
+        "emr/dashboard.html",
+        patient=patient,
+        timeline=timeline,
+        rehabilitation_summary=rehabilitation_summary,
+    )
 
 
 @patient_bp.get("/<patient_id>/emr/timeline")
 @login_required
 def timeline(patient_id):
-    patient=_patient(patient_id)
-    try: require_emr_access(current_user,patient)
-    except PermissionError: abort(403)
-    log_auth_event("emr.timeline_viewed",actor=current_user,details={"patient_id":patient.id}); db.session.commit()
-    return render_template("emr/dashboard.html",patient=patient,timeline=build_patient_timeline(patient,signed_womens_health_only=current_user.has_role("Patient")))
+    patient = _patient(patient_id)
 
+    try:
+        require_emr_access(current_user, patient)
+    except PermissionError:
+        abort(403)
+
+    log_auth_event(
+        "emr.timeline_viewed",
+        actor=current_user,
+        details={"patient_id": patient.id},
+    )
+    db.session.commit()
+
+    rehabilitation_summary = build_patient_rehabilitation_summary(patient)
+
+    return render_template(
+        "emr/dashboard.html",
+        patient=patient,
+        timeline=build_patient_timeline(
+            patient,
+            signed_womens_health_only=current_user.has_role("Patient"),
+        ),
+        rehabilitation_summary=rehabilitation_summary,
+    )
 
 @patient_bp.route("/<patient_id>/attachments",methods=["GET","POST"])
 @login_required

@@ -13,10 +13,28 @@ from sqlalchemy.orm import joinedload, selectinload
 from werkzeug.utils import secure_filename
 
 from extensions import db
-from models import (Appointment, CareTeam, Diagnosis, Doctor, LabOrder,
-                    MedicalAttachment, MedicalRecord, Medication, NursingNote,
-                    Patient, Prescription, PrescriptionItem, RadiologyOrder,
-                    VitalSign, WomensHealthApproval, WomensHealthTimelineEvent)
+from models import (
+    Appointment,
+    CareTeam,
+    Diagnosis,
+    Doctor,
+    LabOrder,
+    MedicalAttachment,
+    MedicalRecord,
+    Medication,
+    NursingNote,
+    Patient,
+    Prescription,
+    PrescriptionItem,
+    RadiologyOrder,
+    RehabilitationAssessment,
+    RehabilitationRecord,
+    TherapyPlan,
+    TherapySession,
+    VitalSign,
+    WomensHealthApproval,
+    WomensHealthTimelineEvent,
+)
 from services.auth_service import log_auth_event
 
 
@@ -203,30 +221,169 @@ def attachment_path(attachment):
 
 
 def build_patient_timeline(patient, signed_womens_health_only=False):
-    events=[]
-    def add(at,kind,title,obj,url=None):
-        if at: events.append({"at":at,"kind":kind,"title":title,"object":obj,"url":url})
+    events = []
+
+    def normalize_event_time(value):
+        if not value:
+            return None
+
+        if value.tzinfo is None:
+            return value.replace(tzinfo=timezone.utc)
+
+        return value
+
+
+    def add(at, kind, title, obj, url=None):
+        normalized_at = normalize_event_time(at)
+
+        if normalized_at:
+            events.append(
+                {
+                    "at": normalized_at,
+                    "kind": kind,
+                    "title": title,
+                    "object": obj,
+                    "url": url,
+                }
+            )
+
+    def date_event(value):
+        if not value:
+            return None
+        return datetime.combine(
+            value,
+            datetime.min.time(),
+            tzinfo=timezone.utc,
+        )
+
     for v in patient.medical_records:
-        add(v.encounter_at,"visit",f"{v.encounter_type.title()} visit",v)
-        if v.follow_up_date: add(datetime.combine(v.follow_up_date,datetime.min.time(),tzinfo=timezone.utc),"follow_up","Scheduled follow-up",v)
-        for d in v.diagnoses: add(d.diagnosed_at,"diagnosis",d.description,d)
-    for p in patient.prescriptions: add(p.prescribed_at,"prescription",f"Prescription {p.prescription_number}",p)
+        add(v.encounter_at, "visit", f"{v.encounter_type.title()} visit", v)
+
+        if v.follow_up_date:
+            add(
+                date_event(v.follow_up_date),
+                "follow_up",
+                "Scheduled follow-up",
+                v,
+            )
+
+        for d in v.diagnoses:
+            add(d.diagnosed_at, "diagnosis", d.description, d)
+
+    for p in patient.prescriptions:
+        add(
+            p.prescribed_at,
+            "prescription",
+            f"Prescription {p.prescription_number}",
+            p,
+        )
+
     for o in patient.lab_orders:
-        add(o.ordered_at,"lab",f"Lab ordered: {o.test_name}",o)
+        add(o.ordered_at, "lab", f"Lab ordered: {o.test_name}", o)
+
         for result in o.results:
-            if result.status == "reviewed": add(result.reviewed_at or result.resulted_at,"lab_result",f"Lab result: {result.component_name}",result)
-    for o in patient.radiology_orders: add(o.ordered_at,"radiology",f"{o.modality}: {o.body_part}",o)
-    for a in patient.attachments: add(a.created_at,"attachment",a.original_name,a)
+            if result.status == "reviewed":
+                add(
+                    result.reviewed_at or result.resulted_at,
+                    "lab_result",
+                    f"Lab result: {result.component_name}",
+                    result,
+                )
+
+    for o in patient.radiology_orders:
+        add(o.ordered_at, "radiology", f"{o.modality}: {o.body_part}", o)
+
+    for a in patient.attachments:
+        add(a.created_at, "attachment", a.original_name, a)
+
+    rehabilitation_records = db.session.scalars(
+        db.select(RehabilitationRecord).where(
+            RehabilitationRecord.patient_id == patient.id,
+            RehabilitationRecord.deleted_at.is_(None),
+        )
+    ).all()
+
+    for record in rehabilitation_records:
+        add(
+            record.created_at,
+            "rehabilitation_record",
+            record.rehabilitation_diagnosis or "Rehabilitation record",
+            record,
+        )
+
+    rehabilitation_assessments = db.session.scalars(
+        db.select(RehabilitationAssessment)
+        .join(RehabilitationRecord)
+        .where(
+            RehabilitationRecord.patient_id == patient.id,
+            RehabilitationAssessment.deleted_at.is_(None),
+        )
+    ).all()
+
+    for assessment in rehabilitation_assessments:
+        add(
+            date_event(assessment.assessment_date),
+            "rehabilitation_assessment",
+            assessment.assessment_summary or "Rehabilitation assessment",
+            assessment,
+        )
+
+    therapy_plans = db.session.scalars(
+        db.select(TherapyPlan).where(
+            TherapyPlan.patient_id == patient.id,
+            TherapyPlan.deleted_at.is_(None),
+        )
+    ).all()
+
+    for plan in therapy_plans:
+        add(
+            date_event(plan.start_date),
+            "therapy_plan",
+            plan.plan_name or "Therapy plan",
+            plan,
+        )
+
+    therapy_sessions = db.session.scalars(
+        db.select(TherapySession).where(
+            TherapySession.patient_id == patient.id,
+            TherapySession.deleted_at.is_(None),
+        )
+    ).all()
+
+    for session in therapy_sessions:
+        add(
+            session.session_date or session.scheduled_start,
+            "therapy_session",
+            session.progress_notes or "Therapy session",
+            session,
+        )
+
     if patient.womens_health_profile:
-        wh_events = db.session.scalars(db.select(WomensHealthTimelineEvent).where(
-            WomensHealthTimelineEvent.profile_id == patient.womens_health_profile.id,
-            WomensHealthTimelineEvent.deleted_at.is_(None),
-        )).all()
+        wh_events = db.session.scalars(
+            db.select(WomensHealthTimelineEvent).where(
+                WomensHealthTimelineEvent.profile_id == patient.womens_health_profile.id,
+                WomensHealthTimelineEvent.deleted_at.is_(None),
+            )
+        ).all()
+
         if signed_womens_health_only:
-            signed = {(x.source_type, x.source_id) for x in db.session.scalars(db.select(WomensHealthApproval).where(
-                WomensHealthApproval.profile_id == patient.womens_health_profile.id,
-                WomensHealthApproval.status == "signed",
-            )).all()}
-            wh_events = [event for event in wh_events if (event.source_type, event.source_id) in signed]
-        for event in wh_events: add(event.event_at,"womens_health",event.title,event)
-    return sorted(events,key=lambda event:event["at"],reverse=True)
+            signed = {
+                (x.source_type, x.source_id)
+                for x in db.session.scalars(
+                    db.select(WomensHealthApproval).where(
+                        WomensHealthApproval.profile_id == patient.womens_health_profile.id,
+                        WomensHealthApproval.status == "signed",
+                    )
+                ).all()
+            }
+
+            wh_events = [
+                event
+                for event in wh_events
+                if (event.source_type, event.source_id) in signed
+            ]
+
+        for event in wh_events:
+            add(event.event_at, "womens_health", event.title, event)
+
+    return sorted(events, key=lambda event: event["at"], reverse=True)

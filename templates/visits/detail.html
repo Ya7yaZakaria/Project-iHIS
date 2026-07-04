@@ -1,1 +1,273 @@
 {% extends 'base.html' %}{% block title %}Visit {{ visit.record_number }} | iHIS{% endblock %}{% block content %}<div class="d-flex justify-content-between mb-4"><div><p class="text-primary fw-semibold mb-1">{{ visit.record_number }}</p><h1 class="h2">{{ visit.encounter_type|title }} visit</h1><p class="text-body-secondary">{{ visit.encounter_at }}</p></div>{% if current_user.has_role('Doctor','Women’s Health Doctor') %}<div><a class="btn btn-outline-primary" href="{{ url_for('emr.visit_edit',visit_id=visit.id) }}">Edit</a><a class="btn btn-primary" href="{{ url_for('emr.diagnoses',visit_id=visit.id) }}">Add diagnosis</a><a class="btn btn-primary" href="{{ url_for('emr.prescriptions',visit_id=visit.id) }}">Prescription</a><a class="btn btn-primary" href="{{ url_for('emr.orders',visit_id=visit.id) }}">Order</a></div>{% endif %}</div><div class="row g-4"><div class="col-lg-8"><section class="card border-0 shadow-sm"><div class="card-body"><h2 class="h5">Clinical note</h2>{% for label,value in [('Chief complaint',visit.chief_complaint),('HPI',visit.history_of_present_illness),('Subjective',visit.subjective),('Objective',visit.objective),('Examination',visit.examination),('Assessment',visit.assessment),('Plan',visit.plan)] %}{% if value %}<h3 class="h6 mt-3">{{ label }}</h3><p>{{ value }}</p>{% endif %}{% endfor %}<h2 class="h5 mt-4">Diagnoses</h2><ul>{% for d in visit.diagnoses %}<li><span class="badge text-bg-{{ 'primary' if d.diagnosis_type=='primary' else 'secondary' }}">{{ d.diagnosis_type }}</span> {{ d.icd10_code or '' }} {{ d.description }}</li>{% else %}<li>No diagnoses</li>{% endfor %}</ul><h2 class="h5 mt-4">Prescriptions</h2>{% for rx in visit.prescriptions %}<div class="border rounded p-3 mb-2"><strong>{{ rx.prescription_number }}</strong> <span class="badge text-bg-secondary">{{ rx.status|replace('_',' ')|title }}</span>{% if rx.completed_at and rx.status == 'partially_dispensed' %} <span class="badge text-bg-dark">Closed partial</span>{% endif %}<ul>{% for item in rx.items %}<li>{{ item.medication.generic_name }} {{ item.dose }} · {{ item.frequency }} · {{ item.route or '' }} · dispensed {{ item.dispensed_quantity }}/{{ item.requested_quantity }}</li>{% endfor %}</ul>{% if rx.pharmacy_notes %}<p><strong>Pharmacy:</strong> {{ rx.pharmacy_notes }}</p>{% endif %}{% if rx.status == 'created' %}<form method="post" action="{{ url_for('emr.send_prescription',prescription_id=rx.id) }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="btn btn-sm btn-primary">Send to pharmacy</button></form>{% else %}<a class="btn btn-sm btn-outline-primary" href="{{ url_for('pharmacy.prescription_detail',prescription_id=rx.id) }}">Details</a>{% endif %}</div>{% else %}<p>No prescriptions.</p>{% endfor %}</div></section></div><div class="col-lg-4"><section class="card border-0 shadow-sm mb-4"><div class="card-body"><h2 class="h5">Vitals</h2><form method="post" action="{{ url_for('emr.vitals',visit_id=visit.id) }}">{{ vital_form.hidden_tag() }}{% for f in [vital_form.temperature_c,vital_form.pulse_bpm,vital_form.systolic_bp,vital_form.diastolic_bp,vital_form.oxygen_saturation] %}<div class="mb-2">{{ f.label(class="form-label small") }}{{ f(class="form-control form-control-sm") }}</div>{% endfor %}{{ vital_form.submit(class="btn btn-sm btn-primary") }}</form></div></section>{% if current_user.has_role('Nurse') %}<section class="card border-0 shadow-sm"><div class="card-body"><h2 class="h5">Nursing note</h2><form method="post" action="{{ url_for('emr.nursing_notes',visit_id=visit.id) }}">{{ nursing_form.hidden_tag() }}{{ nursing_form.note_type(class="form-select mb-2") }}{{ nursing_form.note(class="form-control mb-2",rows=3) }}{{ nursing_form.submit(class="btn btn-sm btn-primary") }}</form></div></section>{% endif %}</div></div>{% endblock %}
+{% extends 'base.html' %}
+
+{% block title %}Visit {{ visit.record_number }} | iHIS{% endblock %}
+
+{% block content %}
+
+<div class="d-flex justify-content-between mb-4">
+
+    <div>
+
+        <p class="text-primary fw-semibold mb-1">
+            {{ visit.record_number }}
+        </p>
+
+        <h1 class="h2">
+            {{ visit.encounter_type|title }} visit
+        </h1>
+
+        <p class="text-body-secondary">
+            {{ visit.encounter_at }}
+        </p>
+
+    </div>
+
+    {% if current_user.has_role('Doctor','Women’s Health Doctor') %}
+
+    <div class="d-flex flex-wrap gap-2">
+
+        <a class="btn btn-outline-primary"
+           href="{{ url_for('emr.visit_edit', visit_id=visit.id) }}">
+            Edit
+        </a>
+
+        <a class="btn btn-primary"
+           href="{{ url_for('emr.diagnoses', visit_id=visit.id) }}">
+            Add diagnosis
+        </a>
+
+        <a class="btn btn-primary"
+           href="{{ url_for('emr.prescriptions', visit_id=visit.id) }}">
+            Prescription
+        </a>
+
+        <a class="btn btn-primary"
+           href="{{ url_for('emr.orders', visit_id=visit.id) }}">
+            Order
+        </a>
+
+        <a class="btn btn-outline-primary"
+           href="{{ url_for('rehabilitation.patient_records', patient_id=visit.patient_id) }}">
+            Rehabilitation
+        </a>
+
+        <a class="btn btn-outline-primary"
+           href="{{ url_for('rehabilitation.record_create', patient_id=visit.patient_id) }}">
+            Add Rehab Record
+        </a>
+
+    </div>
+
+    {% endif %}
+
+</div>
+
+<div class="row g-4">
+
+    <div class="col-lg-8">
+
+        <section class="card border-0 shadow-sm">
+
+            <div class="card-body">
+
+                <h2 class="h5">Clinical note</h2>
+
+                {% for label, value in [
+                    ('Chief complaint', visit.chief_complaint),
+                    ('HPI', visit.history_of_present_illness),
+                    ('Subjective', visit.subjective),
+                    ('Objective', visit.objective),
+                    ('Examination', visit.examination),
+                    ('Assessment', visit.assessment),
+                    ('Plan', visit.plan)
+                ] %}
+
+                    {% if value %}
+
+                        <h3 class="h6 mt-3">{{ label }}</h3>
+
+                        <p>{{ value }}</p>
+
+                    {% endif %}
+
+                {% endfor %}
+
+                <h2 class="h5 mt-4">Diagnoses</h2>
+
+                <ul>
+
+                    {% for d in visit.diagnoses %}
+
+                        <li>
+
+                            <span class="badge text-bg-{{ 'primary' if d.diagnosis_type == 'primary' else 'secondary' }}">
+                                {{ d.diagnosis_type }}
+                            </span>
+
+                            {{ d.icd10_code or '' }} {{ d.description }}
+
+                        </li>
+
+                    {% else %}
+
+                        <li>No diagnoses</li>
+
+                    {% endfor %}
+
+                </ul>
+
+                <h2 class="h5 mt-4">Prescriptions</h2>
+
+                {% for rx in visit.prescriptions %}
+
+                    <div class="border rounded p-3 mb-2">
+
+                        <strong>{{ rx.prescription_number }}</strong>
+
+                        <span class="badge text-bg-secondary">
+                            {{ rx.status|replace('_', ' ')|title }}
+                        </span>
+
+                        {% if rx.completed_at and rx.status == 'partially_dispensed' %}
+
+                            <span class="badge text-bg-dark">
+                                Closed partial
+                            </span>
+
+                        {% endif %}
+
+                        <ul>
+
+                            {% for item in rx.items %}
+
+                                <li>
+                                    {{ item.medication.generic_name }}
+                                    {{ item.dose }}
+                                    · {{ item.frequency }}
+                                    · {{ item.route or '' }}
+                                    · dispensed {{ item.dispensed_quantity }}/{{ item.requested_quantity }}
+                                </li>
+
+                            {% endfor %}
+
+                        </ul>
+
+                        {% if rx.pharmacy_notes %}
+
+                            <p>
+                                <strong>Pharmacy:</strong>
+                                {{ rx.pharmacy_notes }}
+                            </p>
+
+                        {% endif %}
+
+                        {% if rx.status == 'created' %}
+
+                            <form method="post"
+                                  action="{{ url_for('emr.send_prescription', prescription_id=rx.id) }}">
+
+                                <input type="hidden"
+                                       name="csrf_token"
+                                       value="{{ csrf_token() }}">
+
+                                <button class="btn btn-sm btn-primary">
+                                    Send to pharmacy
+                                </button>
+
+                            </form>
+
+                        {% else %}
+
+                            <a class="btn btn-sm btn-outline-primary"
+                               href="{{ url_for('pharmacy.prescription_detail', prescription_id=rx.id) }}">
+                                Details
+                            </a>
+
+                        {% endif %}
+
+                    </div>
+
+                {% else %}
+
+                    <p>No prescriptions.</p>
+
+                {% endfor %}
+
+            </div>
+
+        </section>
+
+    </div>
+
+    <div class="col-lg-4">
+
+        <section class="card border-0 shadow-sm mb-4">
+
+            <div class="card-body">
+
+                <h2 class="h5">Vitals</h2>
+
+                <form method="post"
+                      action="{{ url_for('emr.vitals', visit_id=visit.id) }}">
+
+                    {{ vital_form.hidden_tag() }}
+
+                    {% for f in [
+                        vital_form.temperature_c,
+                        vital_form.pulse_bpm,
+                        vital_form.systolic_bp,
+                        vital_form.diastolic_bp,
+                        vital_form.oxygen_saturation
+                    ] %}
+
+                        <div class="mb-2">
+
+                            {{ f.label(class="form-label small") }}
+
+                            {{ f(class="form-control form-control-sm") }}
+
+                        </div>
+
+                    {% endfor %}
+
+                    {{ vital_form.submit(class="btn btn-sm btn-primary") }}
+
+                </form>
+
+            </div>
+
+        </section>
+
+        {% if current_user.has_role('Nurse') %}
+
+        <section class="card border-0 shadow-sm">
+
+            <div class="card-body">
+
+                <h2 class="h5">Nursing note</h2>
+
+                <form method="post"
+                      action="{{ url_for('emr.nursing_notes', visit_id=visit.id) }}">
+
+                    {{ nursing_form.hidden_tag() }}
+
+                    {{ nursing_form.note_type(class="form-select mb-2") }}
+
+                    {{ nursing_form.note(class="form-control mb-2", rows=3) }}
+
+                    {{ nursing_form.submit(class="btn btn-sm btn-primary") }}
+
+                </form>
+
+            </div>
+
+        </section>
+
+        {% endif %}
+
+    </div>
+
+</div>
+
+{% endblock %}
