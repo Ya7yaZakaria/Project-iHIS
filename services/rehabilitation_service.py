@@ -332,3 +332,171 @@ def build_patient_rehabilitation_summary(patient):
         "latest_session": latest_session,
         "progress": build_rehabilitation_progress(latest_record),
     }
+
+def _average(values):
+    values = [value for value in values if value is not None]
+
+    if not values:
+        return None
+
+    return round(
+        sum(float(value) for value in values) / len(values),
+        2,
+    )
+
+
+def _current_plan_for_record(record):
+    active_plans = [
+        plan
+        for plan in (record.therapy_plans or [])
+        if plan.active and not plan.is_deleted
+    ]
+
+    if not active_plans:
+        return None
+
+    return sorted(
+        active_plans,
+        key=lambda plan: (
+            plan.start_date,
+            plan.created_at,
+        ),
+        reverse=True,
+    )[0]
+
+
+def build_patient_progress_report():
+    records = (
+        RehabilitationRecord.query
+        .filter(RehabilitationRecord.deleted_at.is_(None))
+        .order_by(RehabilitationRecord.created_at.desc())
+        .all()
+    )
+
+    rows = []
+
+    for record in records:
+        progress = build_rehabilitation_progress(record)
+        current_plan = _current_plan_for_record(record)
+
+        rows.append(
+            {
+                "record": record,
+                "patient": record.patient,
+                "diagnosis": record.rehabilitation_diagnosis,
+                "current_plan": current_plan,
+                "latest_pain_score": progress["latest_pain_score"],
+                "latest_functional_score": progress["latest_functional_score"],
+                "completed_sessions": progress["completed_sessions"],
+                "progress": progress,
+            }
+        )
+
+    return rows
+
+
+def build_therapist_workload_report():
+    workload = {}
+
+    plans = (
+        TherapyPlan.query
+        .filter(TherapyPlan.deleted_at.is_(None))
+        .all()
+    )
+
+    sessions = (
+        TherapySession.query
+        .filter(TherapySession.deleted_at.is_(None))
+        .all()
+    )
+
+    def entry_for(therapist_id, therapist):
+        key = therapist_id or "unassigned"
+
+        if key not in workload:
+            workload[key] = {
+                "therapist": therapist,
+                "active_plans": 0,
+                "scheduled_sessions": 0,
+                "completed_sessions": 0,
+            }
+
+        return workload[key]
+
+    for plan in plans:
+        entry = entry_for(plan.therapist_id, plan.therapist)
+
+        if plan.active:
+            entry["active_plans"] += 1
+
+    for session in sessions:
+        entry = entry_for(session.therapist_id, session.therapist)
+
+        if session.status == "completed":
+            entry["completed_sessions"] += 1
+        elif session.status == "scheduled":
+            entry["scheduled_sessions"] += 1
+
+    return list(workload.values())
+
+
+def build_rehabilitation_report_summary():
+    records = (
+        RehabilitationRecord.query
+        .filter(RehabilitationRecord.deleted_at.is_(None))
+        .all()
+    )
+
+    plans = (
+        TherapyPlan.query
+        .filter(TherapyPlan.deleted_at.is_(None))
+        .all()
+    )
+
+    sessions = (
+        TherapySession.query
+        .filter(TherapySession.deleted_at.is_(None))
+        .all()
+    )
+
+    patient_progress = build_patient_progress_report()
+    therapist_workload = build_therapist_workload_report()
+
+    latest_pain_scores = [
+        row["latest_pain_score"]
+        for row in patient_progress
+    ]
+
+    latest_functional_scores = [
+        row["latest_functional_score"]
+        for row in patient_progress
+    ]
+
+    records_needing_review = [
+        row
+        for row in patient_progress
+        if row["record"].status == "active"
+        and row["current_plan"] is None
+    ]
+
+    return {
+        "record_count": len(records),
+        "active_record_count": len(
+            [record for record in records if record.status == "active"]
+        ),
+        "completed_record_count": len(
+            [record for record in records if record.status == "completed"]
+        ),
+        "active_plan_count": len(
+            [plan for plan in plans if plan.active]
+        ),
+        "total_session_count": len(sessions),
+        "completed_session_count": len(
+            [session for session in sessions if session.status == "completed"]
+        ),
+        "average_latest_pain_score": _average(latest_pain_scores),
+        "average_latest_functional_score": _average(latest_functional_scores),
+        "records_needing_review": records_needing_review,
+        "patient_progress": patient_progress,
+        "therapist_workload": therapist_workload,
+    }

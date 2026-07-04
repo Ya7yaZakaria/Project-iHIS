@@ -218,6 +218,9 @@ from services.rehabilitation_service import (
     add_therapy_session,
     build_patient_rehabilitation_summary,
     build_rehabilitation_progress,
+    build_patient_progress_report,
+    build_rehabilitation_report_summary,
+    build_therapist_workload_report,
     calculate_pain_change,
     complete_therapy_session,
     create_exercise,
@@ -430,6 +433,7 @@ def test_rehabilitation_routes_are_registered(app):
 
     expected_routes = {
         "rehabilitation.index": "/rehabilitation/",
+        "rehabilitation.reports": "/rehabilitation/reports",
         "rehabilitation.patient_records": "/rehabilitation/patients/<patient_id>",
         "rehabilitation.record_create": "/rehabilitation/patients/<patient_id>/create",
         "rehabilitation.record_detail": "/rehabilitation/<record_id>",
@@ -571,7 +575,7 @@ def test_emr_timeline_includes_therapy_plan_and_session_events(session):
     assert len(session_events) == 1
     assert session_events[0]["object"].id == therapy_session.id
     assert session_events[0]["title"] == "Timeline therapy session"
-    
+
 def test_emr_timeline_includes_rehabilitation_record(session):
     record = _record(session, "timeline-record")
 
@@ -586,3 +590,147 @@ def test_emr_timeline_includes_rehabilitation_record(session):
     assert len(rehab_events) == 1
     assert rehab_events[0]["object"].id == record.id
     assert rehab_events[0]["title"] == record.rehabilitation_diagnosis
+
+def test_rehabilitation_report_summary_empty(session):
+    summary = build_rehabilitation_report_summary()
+
+    assert summary["record_count"] == 0
+    assert summary["active_record_count"] == 0
+    assert summary["completed_record_count"] == 0
+    assert summary["active_plan_count"] == 0
+    assert summary["total_session_count"] == 0
+    assert summary["completed_session_count"] == 0
+    assert summary["average_latest_pain_score"] is None
+    assert summary["average_latest_functional_score"] is None
+    assert summary["records_needing_review"] == []
+    assert summary["patient_progress"] == []
+    assert summary["therapist_workload"] == []
+
+
+def test_rehabilitation_report_summary_with_records_plans_sessions(session):
+    record = _record(session, "report-summary")
+    therapist = _therapist(session, "report-summary")
+
+    create_initial_assessment(
+        rehabilitation_record_id=record.id,
+        assessment_date=date.today(),
+        functional_score=90,
+        assessment_summary="Strong improvement",
+    )
+
+    plan = create_therapy_plan(
+        rehabilitation_record_id=record.id,
+        patient_id=record.patient_id,
+        therapist_id=therapist.id,
+        plan_name="Report therapy plan",
+        start_date=date.today(),
+        goals=["Improve mobility"],
+    )
+
+    therapy_session = add_therapy_session(
+        therapy_plan_id=plan.id,
+        patient_id=record.patient_id,
+        therapist_id=therapist.id,
+        scheduled_start=datetime.now(timezone.utc),
+        pain_before=8,
+        pain_after=2,
+    )
+
+    complete_therapy_session(therapy_session)
+
+    summary = build_rehabilitation_report_summary()
+
+    assert summary["record_count"] == 1
+    assert summary["active_record_count"] == 1
+    assert summary["completed_record_count"] == 0
+    assert summary["active_plan_count"] == 1
+    assert summary["total_session_count"] == 1
+    assert summary["completed_session_count"] == 1
+    assert summary["average_latest_pain_score"] == 2
+    assert summary["average_latest_functional_score"] == 90
+    assert summary["records_needing_review"] == []
+    assert len(summary["patient_progress"]) == 1
+    assert len(summary["therapist_workload"]) == 1
+
+
+def test_rehabilitation_patient_progress_report(session):
+    record = _record(session, "patient-progress")
+    therapist = _therapist(session, "patient-progress")
+
+    create_initial_assessment(
+        rehabilitation_record_id=record.id,
+        assessment_date=date.today(),
+        functional_score=70,
+        assessment_summary="Baseline progress",
+    )
+
+    plan = create_therapy_plan(
+        rehabilitation_record_id=record.id,
+        patient_id=record.patient_id,
+        therapist_id=therapist.id,
+        plan_name="Patient progress plan",
+        start_date=date.today(),
+        goals=["Pain control"],
+    )
+
+    therapy_session = add_therapy_session(
+        therapy_plan_id=plan.id,
+        patient_id=record.patient_id,
+        therapist_id=therapist.id,
+        scheduled_start=datetime.now(timezone.utc),
+        pain_before=7,
+        pain_after=5,
+    )
+
+    complete_therapy_session(therapy_session)
+
+    report = build_patient_progress_report()
+
+    assert len(report) == 1
+    assert report[0]["record"].id == record.id
+    assert report[0]["patient"].id == record.patient_id
+    assert report[0]["current_plan"].id == plan.id
+    assert report[0]["latest_pain_score"] == 5
+    assert report[0]["latest_functional_score"] == 70
+    assert report[0]["completed_sessions"] == 1
+
+
+def test_rehabilitation_therapist_workload_report(session):
+    record = _record(session, "therapist-workload")
+    therapist = _therapist(session, "therapist-workload")
+
+    plan = create_therapy_plan(
+        rehabilitation_record_id=record.id,
+        patient_id=record.patient_id,
+        therapist_id=therapist.id,
+        plan_name="Therapist workload plan",
+        start_date=date.today(),
+        goals=["Strength"],
+    )
+
+    scheduled_session = add_therapy_session(
+        therapy_plan_id=plan.id,
+        patient_id=record.patient_id,
+        therapist_id=therapist.id,
+        scheduled_start=datetime.now(timezone.utc),
+    )
+
+    completed_session = add_therapy_session(
+        therapy_plan_id=plan.id,
+        patient_id=record.patient_id,
+        therapist_id=therapist.id,
+        scheduled_start=datetime.now(timezone.utc),
+        pain_before=6,
+        pain_after=3,
+    )
+
+    complete_therapy_session(completed_session)
+
+    report = build_therapist_workload_report()
+
+    assert scheduled_session.id
+    assert len(report) == 1
+    assert report[0]["therapist"].id == therapist.id
+    assert report[0]["active_plans"] == 1
+    assert report[0]["scheduled_sessions"] == 1
+    assert report[0]["completed_sessions"] == 1

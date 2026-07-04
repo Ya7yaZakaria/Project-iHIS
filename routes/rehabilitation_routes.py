@@ -26,6 +26,7 @@ from services.rehabilitation_service import (
     RehabilitationServiceError,
     add_therapy_session,
     build_rehabilitation_progress,
+    build_rehabilitation_report_summary,
     create_exercise,
     create_initial_assessment,
     create_rehabilitation_record,
@@ -105,6 +106,13 @@ def _can_view_patient_rehabilitation(patient):
 
     return False
 
+def _can_view_rehabilitation_reports():
+    return current_user.has_role(
+        "Super Admin",
+        "Admin",
+        "Rehabilitation Specialist",
+        "Doctor",
+    )
 
 def _blank_choice(label="Not linked"):
     return [("", label)]
@@ -301,6 +309,20 @@ def index():
         records=records,
         active_plans=active_plans,
         exercises=exercises,
+    )
+
+
+@rehabilitation_bp.get("/reports")
+@login_required
+def reports():
+    if not _can_view_rehabilitation_reports():
+        abort(403)
+
+    report_summary = build_rehabilitation_report_summary()
+
+    return render_template(
+        "rehabilitation/reports.html",
+        report_summary=report_summary,
     )
 
 

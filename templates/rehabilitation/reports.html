@@ -1,0 +1,214 @@
+{% extends "base.html" %}
+
+{% block title %}Rehabilitation Reports{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+
+    <div class="d-flex justify-content-between align-items-start mb-4">
+        <div>
+            <h1 class="h3 mb-1">Rehabilitation Reports</h1>
+            <p class="text-muted mb-0">
+                Clinical rehabilitation activity, outcomes, patient progress, and therapist workload.
+            </p>
+        </div>
+
+        <a href="{{ url_for('rehabilitation.index') }}" class="btn btn-outline-secondary">
+            Back to Rehab Dashboard
+        </a>
+    </div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+                    <div class="text-muted small">Total Records</div>
+                    <div class="display-6">{{ report_summary.record_count }}</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+                    <div class="text-muted small">Active Records</div>
+                    <div class="display-6">{{ report_summary.active_record_count }}</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+                    <div class="text-muted small">Active Plans</div>
+                    <div class="display-6">{{ report_summary.active_plan_count }}</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+                    <div class="text-muted small">Completed Sessions</div>
+                    <div class="display-6">{{ report_summary.completed_session_count }}</div>
+                    <div class="text-muted small">
+                        of {{ report_summary.total_session_count }} total sessions
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="text-muted small">Completed Records</div>
+                    <div class="h2 mb-0">{{ report_summary.completed_record_count }}</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="text-muted small">Average Latest Pain Score</div>
+                    <div class="h2 mb-0">
+                        {{ report_summary.average_latest_pain_score if report_summary.average_latest_pain_score is not none else "—" }}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="text-muted small">Average Functional Score</div>
+                    <div class="h2 mb-0">
+                        {{ report_summary.average_latest_functional_score if report_summary.average_latest_functional_score is not none else "—" }}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if report_summary.records_needing_review %}
+        <div class="alert alert-warning">
+            <strong>{{ report_summary.records_needing_review|length }}</strong>
+            active rehabilitation record(s) need review because they do not have an active therapy plan.
+        </div>
+    {% endif %}
+
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-white d-flex justify-content-between align-items-center">
+            <div>
+                <h2 class="h5 mb-0">Patient Progress Report</h2>
+                <div class="text-muted small">Latest progress per rehabilitation record.</div>
+            </div>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Patient</th>
+                        <th>Diagnosis</th>
+                        <th>Current Plan</th>
+                        <th>Latest Pain</th>
+                        <th>Functional Score</th>
+                        <th>Completed Sessions</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in report_summary.patient_progress %}
+                        <tr>
+                            <td>
+                                <div class="fw-semibold">
+                                    {{ row.patient.first_name }} {{ row.patient.last_name }}
+                                </div>
+                                <div class="text-muted small">
+                                    {{ row.patient.medical_record_number }}
+                                </div>
+                            </td>
+                            <td>{{ row.diagnosis or "—" }}</td>
+                            <td>
+                                {% if row.current_plan %}
+                                    {{ row.current_plan.plan_name }}
+                                {% else %}
+                                    <span class="badge text-bg-warning">No active plan</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {{ row.latest_pain_score if row.latest_pain_score is not none else "—" }}
+                            </td>
+                            <td>
+                                {{ row.latest_functional_score if row.latest_functional_score is not none else "—" }}
+                            </td>
+                            <td>{{ row.completed_sessions }}</td>
+                            <td class="text-end">
+                                <a class="btn btn-sm btn-outline-primary"
+                                   href="{{ url_for('rehabilitation.progress', record_id=row.record.id) }}">
+                                    Progress
+                                </a>
+                            </td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="7" class="text-center text-muted py-4">
+                                No rehabilitation records yet.
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-header bg-white">
+            <h2 class="h5 mb-0">Therapist Workload</h2>
+            <div class="text-muted small">Active plans and session workload by therapist.</div>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Therapist</th>
+                        <th>Active Plans</th>
+                        <th>Scheduled Sessions</th>
+                        <th>Completed Sessions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in report_summary.therapist_workload %}
+                        <tr>
+                            <td>
+                                {% if row.therapist and row.therapist.user %}
+                                    {{ row.therapist.user.first_name }} {{ row.therapist.user.last_name }}
+                                    <div class="text-muted small">
+                                        {{ row.therapist.license_number or "No license number" }}
+                                    </div>
+                                {% else %}
+                                    <span class="text-muted">Unassigned</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ row.active_plans }}</td>
+                            <td>{{ row.scheduled_sessions }}</td>
+                            <td>{{ row.completed_sessions }}</td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="4" class="text-center text-muted py-4">
+                                No therapist workload data yet.
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+{% endblock %}
