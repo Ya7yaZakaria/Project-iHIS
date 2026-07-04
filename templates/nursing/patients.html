@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}Nursing Patients{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <div>
+    <h1 class="h3 mb-1">Nursing Patients</h1>
+    <p class="text-body-secondary mb-0">Patients from today's clinic or recent active records.</p>
+  </div>
+  <a class="btn btn-outline-secondary" href="{{ url_for('nursing.dashboard') }}">Back to dashboard</a>
+</div>
+
+<div class="card">
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+      <thead>
+        <tr>
+          <th>MRN</th>
+          <th>Patient</th>
+          <th>Phone</th>
+          <th class="text-end">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for patient in patients %}
+          <tr>
+            <td>{{ patient.medical_record_number }}</td>
+            <td>{{ patient.first_name }} {{ patient.last_name }}</td>
+            <td>{{ patient.phone or "-" }}</td>
+            <td class="text-end">
+              <a class="btn btn-sm btn-outline-primary" href="{{ url_for('nursing.create_vitals', patient_id=patient.id) }}">Vitals</a>
+              <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('nursing.create_note', patient_id=patient.id) }}">Note</a>
+              <a class="btn btn-sm btn-outline-success" href="{{ url_for('nursing.create_care_plan_route', patient_id=patient.id) }}">Care plan</a>
+            </td>
+          </tr>
+        {% else %}
+          <tr><td colspan="4" class="text-center text-body-secondary py-4">No patients found.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

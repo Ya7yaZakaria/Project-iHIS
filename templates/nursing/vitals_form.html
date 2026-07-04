@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}Record Vitals{% endblock %}
+
+{% block content %}
+<h1 class="h3 mb-1">Record Vitals</h1>
+<p class="text-body-secondary">Patient: {{ patient.first_name }} {{ patient.last_name }}</p>
+
+<form method="post" class="card">
+  <div class="card-body">
+    {{ form.hidden_tag() }}
+
+    <div class="mb-3">
+      {{ form.medical_record_id.label(class="form-label") }}
+      {{ form.medical_record_id(class="form-select") }}
+    </div>
+
+    <div class="row g-3">
+      {% for field in [form.systolic_bp, form.diastolic_bp, form.pulse_bpm, form.temperature_c, form.respiratory_rate, form.oxygen_saturation, form.weight_kg, form.height_cm, form.pain_score] %}
+        <div class="col-md-4">
+          {{ field.label(class="form-label") }}
+          {{ field(class="form-control") }}
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+  <div class="card-footer d-flex justify-content-between">
+    <a class="btn btn-outline-secondary" href="{{ url_for('nursing.patients') }}">Cancel</a>
+    {{ form.submit(class="btn btn-primary") }}
+  </div>
+</form>
+{% endblock %}

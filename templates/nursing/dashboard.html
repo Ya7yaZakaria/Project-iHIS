@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% block title %}Nursing Dashboard{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <div>
+    <h1 class="h3 mb-1">Nursing Dashboard</h1>
+    <p class="text-body-secondary mb-0">Simple EMR-integrated nursing workflow.</p>
+  </div>
+  <div class="d-flex gap-2">
+    <a class="btn btn-outline-primary" href="{{ url_for('nursing.patients') }}">Patients</a>
+    <a class="btn btn-primary" href="{{ url_for('nursing.medication_administration') }}">Medication administration</a>
+  </div>
+</div>
+
+<div class="row g-3 mb-4">
+  <div class="col-md-3">
+    <div class="card h-100"><div class="card-body">
+      <p class="text-body-secondary mb-1">Assigned / today patients</p>
+      <h2 class="h4 mb-0">{{ dashboard.assigned_patients|length }}</h2>
+    </div></div>
+  </div>
+  <div class="col-md-3">
+    <div class="card h-100"><div class="card-body">
+      <p class="text-body-secondary mb-1">Recent vitals</p>
+      <h2 class="h4 mb-0">{{ dashboard.recent_vitals|length }}</h2>
+    </div></div>
+  </div>
+  <div class="col-md-3">
+    <div class="card h-100"><div class="card-body">
+      <p class="text-body-secondary mb-1">Active care plans</p>
+      <h2 class="h4 mb-0">{{ dashboard.active_care_plans|length }}</h2>
+    </div></div>
+  </div>
+  <div class="col-md-3">
+    <div class="card h-100"><div class="card-body">
+      <p class="text-body-secondary mb-1">Alerts</p>
+      <h2 class="h4 mb-0">{{ dashboard.alerts|length }}</h2>
+    </div></div>
+  </div>
+</div>
+
+<div class="row g-4">
+  <div class="col-lg-6">
+    <div class="card h-100">
+      <div class="card-header fw-semibold">Recent nursing notes</div>
+      <div class="list-group list-group-flush">
+        {% for note in dashboard.recent_notes %}
+          <div class="list-group-item">
+            <div class="fw-semibold">{{ note.note_type|title }}</div>
+            <div class="small text-body-secondary">{{ note.recorded_at }}</div>
+            <p class="mb-0 small">{{ note.note[:180] }}{% if note.note|length > 180 %}...{% endif %}</p>
+          </div>
+        {% else %}
+          <div class="list-group-item text-body-secondary">No nursing notes yet.</div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-6">
+    <div class="card h-100">
+      <div class="card-header fw-semibold">Simple alerts</div>
+      <div class="list-group list-group-flush">
+        {% for alert in dashboard.alerts %}
+          <div class="list-group-item">
+            <span class="badge text-bg-warning">{{ alert.severity }}</span>
+            <span class="fw-semibold">{{ alert.patient }}</span>
+            <div class="small">{{ alert.message }}</div>
+          </div>
+        {% else %}
+          <div class="list-group-item text-body-secondary">No alerts.</div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

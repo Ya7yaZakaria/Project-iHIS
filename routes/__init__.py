@@ -13,6 +13,7 @@ from .radiology_routes import radiology_bp, patient_radiology_bp
 from .reception_routes import reception_bp
 from .rehabilitation_routes import rehabilitation_bp
 from .womens_health_routes import womens_health_bp, womens_health_clinical_bp
+from .nursing_routes import nursing_bp
 from .user_routes import roles_bp, users_bp
 
 BLUEPRINTS = (
@@ -32,9 +33,11 @@ BLUEPRINTS = (
     patient_medication_bp,
     dentistry_bp,
     rehabilitation_bp,
+    nursing_bp,
     womens_health_bp,
     womens_health_clinical_bp,
     reception_bp,
     users_bp,
     roles_bp,
+    
 )

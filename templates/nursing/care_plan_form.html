@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block title %}Nursing Care Plans{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <div>
+    <h1 class="h3 mb-1">Nursing Care Plans</h1>
+    <p class="text-body-secondary mb-0">Simple care plan workflow.</p>
+  </div>
+  <a class="btn btn-primary" href="{{ url_for('nursing.create_care_plan_route') }}">Create care plan</a>
+</div>
+
+{% if form %}
+<form method="post" class="card">
+  <div class="card-body">
+    {{ form.hidden_tag() }}
+
+    <div class="row g-3">
+      <div class="col-md-6">{{ form.patient_id.label(class="form-label") }} {{ form.patient_id(class="form-select") }}</div>
+      <div class="col-md-6">{{ form.medical_record_id.label(class="form-label") }} {{ form.medical_record_id(class="form-select") }}</div>
+      <div class="col-md-12">{{ form.nursing_diagnosis.label(class="form-label") }} {{ form.nursing_diagnosis(class="form-control", rows="3") }}</div>
+      <div class="col-md-6">{{ form.goals.label(class="form-label") }} {{ form.goals(class="form-control", rows="4") }}</div>
+      <div class="col-md-6">{{ form.interventions.label(class="form-label") }} {{ form.interventions(class="form-control", rows="4") }}</div>
+      <div class="col-md-8">{{ form.evaluation.label(class="form-label") }} {{ form.evaluation(class="form-control", rows="3") }}</div>
+      <div class="col-md-4">{{ form.status.label(class="form-label") }} {{ form.status(class="form-select") }}</div>
+    </div>
+  </div>
+  <div class="card-footer d-flex justify-content-between">
+    <a class="btn btn-outline-secondary" href="{{ url_for('nursing.care_plans') }}">Cancel</a>
+    {{ form.submit(class="btn btn-primary") }}
+  </div>
+</form>
+{% else %}
+<div class="card">
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+      <thead>
+        <tr>
+          <th>Patient</th>
+          <th>Diagnosis</th>
+          <th>Status</th>
+          <th>Created</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for plan in plans %}
+          <tr>
+            <td>{{ plan.patient.first_name }} {{ plan.patient.last_name }}</td>
+            <td>{{ plan.nursing_diagnosis[:100] }}</td>
+            <td><span class="badge text-bg-secondary">{{ plan.status }}</span></td>
+            <td>{{ plan.created_at }}</td>
+          </tr>
+        {% else %}
+          <tr><td colspan="4" class="text-center text-body-secondary py-4">No care plans yet.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endif %}
+{% endblock %}

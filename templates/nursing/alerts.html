@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}Nursing Alerts{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <div>
+    <h1 class="h3 mb-1">Nursing Alerts</h1>
+    <p class="text-body-secondary mb-0">Computed alerts from vitals and medication administration.</p>
+  </div>
+  <a class="btn btn-outline-secondary" href="{{ url_for('nursing.dashboard') }}">Back</a>
+</div>
+
+<div class="card">
+  <div class="list-group list-group-flush">
+    {% for alert in alerts %}
+      <div class="list-group-item">
+        <span class="badge text-bg-warning">{{ alert.severity }}</span>
+        <span class="fw-semibold">{{ alert.patient }}</span>
+        <div>{{ alert.message }}</div>
+        <div class="small text-body-secondary">{{ alert.created_at }}</div>
+      </div>
+    {% else %}
+      <div class="list-group-item text-body-secondary">No alerts.</div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

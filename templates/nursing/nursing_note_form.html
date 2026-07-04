@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}Nursing Note{% endblock %}
+
+{% block content %}
+<h1 class="h3 mb-1">Nursing Note</h1>
+<p class="text-body-secondary">Patient: {{ patient.first_name }} {{ patient.last_name }}</p>
+
+<form method="post" class="card">
+  <div class="card-body">
+    {{ form.hidden_tag() }}
+
+    <div class="row g-3">
+      <div class="col-md-6">
+        {{ form.medical_record_id.label(class="form-label") }}
+        {{ form.medical_record_id(class="form-select") }}
+      </div>
+      <div class="col-md-6">
+        {{ form.note_type.label(class="form-label") }}
+        {{ form.note_type(class="form-select") }}
+      </div>
+
+      {% for field in [form.subjective_note, form.objective_note, form.nursing_assessment, form.nursing_intervention, form.response_to_care, form.follow_up_recommendation] %}
+        <div class="col-md-6">
+          {{ field.label(class="form-label") }}
+          {{ field(class="form-control", rows="4") }}
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+  <div class="card-footer d-flex justify-content-between">
+    <a class="btn btn-outline-secondary" href="{{ url_for('nursing.patients') }}">Cancel</a>
+    {{ form.submit(class="btn btn-primary") }}
+  </div>
+</form>
+{% endblock %}
