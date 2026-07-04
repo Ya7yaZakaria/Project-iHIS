@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+{% block title %}Walk-in | iHIS{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-9">
+    <h1 class="h2 mb-4">Walk-in patient</h1>
+
+    <div class="card border-0 shadow-sm">
+      <div class="card-body">
+        <form method="post">
+          {{ form.hidden_tag() }}
+
+          <h2 class="h5">Existing patient</h2>
+          <div class="mb-4">
+            {{ form.patient_id.label(class='form-label') }}
+            {{ form.patient_id(class='form-select') }}
+            <div class="form-text">Leave blank to register a new walk-in patient.</div>
+          </div>
+
+          <h2 class="h5">New patient details</h2>
+          <div class="row g-3">
+            <div class="col-md-6">{{ form.medical_record_number.label(class='form-label') }}{{ form.medical_record_number(class='form-control') }}</div>
+            <div class="col-md-6">{{ form.phone.label(class='form-label') }}{{ form.phone(class='form-control') }}</div>
+            <div class="col-md-6">{{ form.first_name.label(class='form-label') }}{{ form.first_name(class='form-control') }}</div>
+            <div class="col-md-6">{{ form.last_name.label(class='form-label') }}{{ form.last_name(class='form-control') }}</div>
+            <div class="col-md-6">{{ form.date_of_birth.label(class='form-label') }}{{ form.date_of_birth(class='form-control') }}</div>
+            <div class="col-md-6">{{ form.sex_at_birth.label(class='form-label') }}{{ form.sex_at_birth(class='form-select') }}</div>
+            <div class="col-12">{{ form.reason.label(class='form-label') }}{{ form.reason(class='form-control', rows='3') }}</div>
+            <div class="col-12">{{ form.reception_notes.label(class='form-label') }}{{ form.reception_notes(class='form-control', rows='3') }}</div>
+          </div>
+
+          <div class="mt-4">
+            {{ form.submit(class='btn btn-primary') }}
+            <a class="btn btn-outline-secondary" href="{{ url_for('reception.dashboard') }}">Cancel</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

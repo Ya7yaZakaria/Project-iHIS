@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+{% block title %}Billing Initiation | iHIS{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-8">
+    <h1 class="h2 mb-4">Billing initiation placeholder</h1>
+
+    <div class="alert alert-info">
+      This is a billing placeholder only. Full accounting, invoices, and payment processing are not implemented yet.
+    </div>
+
+    <div class="card border-0 shadow-sm">
+      <div class="card-body">
+        <form method="post">
+          {{ form.hidden_tag() }}
+
+          <div class="mb-3">{{ form.patient_id.label(class='form-label') }}{{ form.patient_id(class='form-select') }}</div>
+          <div class="mb-3">{{ form.appointment_id.label(class='form-label') }}{{ form.appointment_id(class='form-select') }}</div>
+          <div class="mb-3">{{ form.status.label(class='form-label') }}{{ form.status(class='form-select') }}</div>
+          <div class="mb-3">{{ form.notes.label(class='form-label') }}{{ form.notes(class='form-control', rows='4') }}</div>
+
+          {{ form.submit(class='btn btn-primary') }}
+          <a class="btn btn-outline-secondary" href="{{ url_for('reception.dashboard') }}">Cancel</a>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

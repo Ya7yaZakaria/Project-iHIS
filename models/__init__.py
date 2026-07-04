@@ -36,5 +36,5 @@ from .womens_health import (AntenatalVisit, DeliveryRecord, FetalBiometry,
                             WomensUltrasoundAttachment, WomensUltrasoundReport)
 
 from .nursing import MedicationAdministration, NursingCarePlan
-
+from .reception import BillingInitiation
 __all__ = [name for name in globals() if not name.startswith("_")]

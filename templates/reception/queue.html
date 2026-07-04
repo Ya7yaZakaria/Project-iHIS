@@ -1,1 +1,86 @@
-{% extends 'base.html' %}{% block title %}Clinic Queue | iHIS{% endblock %}{% block content %}<div class="d-flex justify-content-between mb-4"><div><h1 class="h2">Clinic queue</h1><p class="text-body-secondary">Arrived, waiting, and in-consultation patients.</p></div>{% if current_user.has_role('Super Admin','Admin','Receptionist') %}<a class="btn btn-primary align-self-start" href="{{ url_for('reception.check_in') }}">Check in</a>{% endif %}</div><div class="card border-0 shadow-sm"><div class="table-responsive"><table class="table align-middle mb-0"><thead><tr><th>Queue</th><th>Patient</th><th>Doctor</th><th>Arrival</th><th>Status</th><th></th></tr></thead><tbody>{% for appointment in appointments %}<tr><td><span class="badge rounded-pill text-bg-primary fs-6">{{ appointment.queue_number or '—' }}</span></td><td>{{ appointment.patient.first_name }} {{ appointment.patient.last_name }}<div class="small text-body-secondary">{{ appointment.patient.medical_record_number }}</div></td><td>{{ appointment.doctor.user.full_name if appointment.doctor else 'Unassigned' }}</td><td>{{ appointment.arrival_time.strftime('%H:%M') if appointment.arrival_time else '—' }}</td><td>{{ appointment.status.replace('_',' ')|title }}</td><td><a class="btn btn-sm btn-outline-primary" href="{{ url_for('appointments.detail',appointment_id=appointment.id) }}">Open</a></td></tr>{% else %}<tr><td colspan="6" class="text-center py-5 text-body-secondary">The queue is empty.</td></tr>{% endfor %}</tbody></table></div></div>{% endblock %}
+{% extends 'base.html' %}
+{% block title %}Clinic Queue | iHIS{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-start mb-4">
+  <div>
+    <h1 class="h2">Clinic queue</h1>
+    <p class="text-body-secondary">Waiting, called, in-consultation, completed, cancelled, and no-show patients.</p>
+  </div>
+
+  {% if current_user.has_role('Super Admin','Admin','Receptionist') %}
+  <div class="d-flex gap-2">
+    <a class="btn btn-outline-primary" href="{{ url_for('reception.check_in') }}">Check in</a>
+    <a class="btn btn-primary" href="{{ url_for('reception.walk_in') }}">Walk-in</a>
+  </div>
+  {% endif %}
+</div>
+
+<div class="card border-0 shadow-sm">
+  <div class="table-responsive">
+    <table class="table align-middle mb-0">
+      <thead>
+        <tr>
+          <th>Queue</th>
+          <th>Patient</th>
+          <th>Phone</th>
+          <th>Doctor</th>
+          <th>Arrival</th>
+          <th>Status</th>
+          {% if current_user.has_role('Super Admin','Admin','Receptionist') %}
+          <th style="width: 260px;">Update</th>
+          <th style="width: 180px;">Reorder</th>
+          {% endif %}
+        </tr>
+      </thead>
+      <tbody>
+        {% for appointment in appointments %}
+        <tr>
+          <td><span class="badge rounded-pill text-bg-primary fs-6">{{ appointment.queue_number or '—' }}</span></td>
+          <td>
+            {{ appointment.patient.first_name }} {{ appointment.patient.last_name }}
+            <div class="small text-body-secondary">{{ appointment.patient.medical_record_number }}</div>
+          </td>
+          <td>{{ appointment.patient.phone or '—' }}</td>
+          <td>{{ appointment.doctor.user.full_name if appointment.doctor and appointment.doctor.user else 'Unassigned' }}</td>
+          <td>{{ appointment.arrival_time.strftime('%H:%M') if appointment.arrival_time else '—' }}</td>
+          <td>{{ appointment.status.replace('_',' ')|title }}</td>
+
+          {% if current_user.has_role('Super Admin','Admin','Receptionist') %}
+          <td>
+            <form method="post" class="d-flex gap-2">
+              {{ status_form.hidden_tag() }}
+              <input type="hidden" name="action" value="status">
+              <input type="hidden" name="appointment_id" value="{{ appointment.id }}">
+              <select class="form-select form-select-sm" name="status">
+                <option value="waiting">Waiting</option>
+                <option value="called">Called</option>
+                <option value="in_consultation">In consultation</option>
+                <option value="completed">Completed</option>
+                <option value="cancelled">Cancelled</option>
+                <option value="no_show">No-show</option>
+              </select>
+              <button class="btn btn-sm btn-outline-primary" type="submit">Save</button>
+            </form>
+          </td>
+          <td>
+            <form method="post" class="d-flex gap-2">
+              {{ reorder_form.hidden_tag() }}
+              <input type="hidden" name="action" value="reorder">
+              <input type="hidden" name="appointment_id" value="{{ appointment.id }}">
+              <input class="form-control form-control-sm" name="queue_number" value="{{ appointment.queue_number or '' }}">
+              <button class="btn btn-sm btn-outline-secondary" type="submit">Move</button>
+            </form>
+          </td>
+          {% endif %}
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="8" class="text-center py-5 text-body-secondary">The queue is empty.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

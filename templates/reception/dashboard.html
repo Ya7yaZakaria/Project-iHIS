@@ -1,6 +1,80 @@
-{% extends 'base.html' %}{% block title %}Reception | iHIS{% endblock %}{% block content %}
-<div class="d-flex justify-content-between mb-4"><div><h1 class="h2">Reception</h1><p class="text-body-secondary">Today’s front-desk operations.</p></div><div><a class="btn btn-outline-primary" href="{{ url_for('reception.register_patient') }}">Register patient</a> <a class="btn btn-primary" href="{{ url_for('appointments.create') }}">Book appointment</a></div></div>
-<div class="row g-3 mb-4">{% for label,value in [('Today',appointments|length),('Waiting',counts.get('waiting',0)),('Completed',counts.get('completed',0)),('No-shows',counts.get('no_show',0))] %}<div class="col-6 col-lg-3"><div class="card card-body border-0 shadow-sm"><span class="text-body-secondary">{{ label }}</span><strong class="fs-3">{{ value }}</strong></div></div>{% endfor %}</div>
-<div class="row g-4"><div class="col-lg-7"><div class="card border-0 shadow-sm"><div class="card-body"><h2 class="h5">Next appointment</h2>{% if next_appointment %}<p class="fs-5 mb-1">{{ next_appointment.scheduled_start.strftime('%H:%M') }} — {{ next_appointment.patient.first_name }} {{ next_appointment.patient.last_name }}</p><a href="{{ url_for('appointments.detail',appointment_id=next_appointment.id) }}">Open appointment</a>{% else %}<p class="text-body-secondary mb-0">No upcoming appointment.</p>{% endif %}</div></div></div><div class="col-lg-5"><div class="card border-0 shadow-sm"><div class="card-body"><h2 class="h5">Doctor-wise schedule</h2>{% for doctor,count in doctor_schedule.items() %}<div class="d-flex justify-content-between border-bottom py-2"><span>{{ doctor }}</span><strong>{{ count }}</strong></div>{% else %}<p class="text-body-secondary">No appointments.</p>{% endfor %}</div></div></div></div>
-<div class="mt-4"><a class="btn btn-primary" href="{{ url_for('reception.check_in') }}">Check in patient</a> <a class="btn btn-outline-primary" href="{{ url_for('reception.queue') }}">Clinic queue</a> <a class="btn btn-outline-secondary" href="{{ url_for('appointments.today') }}">Today’s list</a></div>
+{% extends 'base.html' %}
+{% block title %}Reception | iHIS{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-start mb-4">
+  <div>
+    <h1 class="h2">Reception</h1>
+    <p class="text-body-secondary">Daily front-desk operations.</p>
+  </div>
+  <div class="d-flex gap-2 flex-wrap">
+    <a class="btn btn-outline-primary" href="{{ url_for('reception.search_patient') }}">Search patient</a>
+    <a class="btn btn-outline-primary" href="{{ url_for('reception.register_patient') }}">Register patient</a>
+    <a class="btn btn-primary" href="{{ url_for('reception.walk_in') }}">Walk-in</a>
+  </div>
+</div>
+
+<div class="row g-3 mb-4">
+  {% for label, value in [
+    ('Daily appointments', dashboard.counts.daily_appointments),
+    ('Waiting', dashboard.counts.waiting),
+    ('Checked-in', dashboard.counts.checked_in),
+    ('No-shows', dashboard.counts.no_shows),
+    ('Walk-ins', dashboard.counts.walk_ins),
+    ('Follow-ups', dashboard.counts.follow_ups)
+  ] %}
+  <div class="col-6 col-lg-2">
+    <div class="card card-body border-0 shadow-sm">
+      <span class="text-body-secondary small">{{ label }}</span>
+      <strong class="fs-3">{{ value }}</strong>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+<div class="card border-0 shadow-sm">
+  <div class="card-header bg-white d-flex justify-content-between align-items-center">
+    <h2 class="h5 mb-0">Today’s appointments</h2>
+    <div class="d-flex gap-2">
+      <a class="btn btn-sm btn-outline-primary" href="{{ url_for('reception.check_in') }}">Check-in</a>
+      <a class="btn btn-sm btn-outline-primary" href="{{ url_for('reception.queue') }}">Queue</a>
+      <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('reception.follow_up') }}">Follow-up</a>
+      <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('reception.billing_initiation') }}">Billing</a>
+    </div>
+  </div>
+
+  <div class="table-responsive">
+    <table class="table align-middle mb-0">
+      <thead>
+        <tr>
+          <th>Time</th>
+          <th>Patient</th>
+          <th>Phone</th>
+          <th>Status</th>
+          <th>Queue</th>
+          <th>Type</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for appointment in dashboard.appointments %}
+        <tr>
+          <td>{{ appointment.scheduled_start.strftime('%H:%M') }}</td>
+          <td>
+            {{ appointment.patient.first_name }} {{ appointment.patient.last_name }}
+            <div class="small text-body-secondary">{{ appointment.patient.medical_record_number }}</div>
+          </td>
+          <td>{{ appointment.patient.phone or '—' }}</td>
+          <td>{{ appointment.status.replace('_',' ')|title }}</td>
+          <td>{{ appointment.queue_number or '—' }}</td>
+          <td>{{ appointment.appointment_type.replace('_',' ')|title }}</td>
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="6" class="text-center py-5 text-body-secondary">No appointments today.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
 {% endblock %}

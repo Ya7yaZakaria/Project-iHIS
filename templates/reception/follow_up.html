@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+{% block title %}Follow-up Booking | iHIS{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-8">
+    <h1 class="h2 mb-4">Book follow-up</h1>
+
+    <div class="card border-0 shadow-sm">
+      <div class="card-body">
+        <form method="post">
+          {{ form.hidden_tag() }}
+
+          <div class="mb-3">{{ form.patient_id.label(class='form-label') }}{{ form.patient_id(class='form-select') }}</div>
+          <div class="mb-3">{{ form.follow_up_of_id.label(class='form-label') }}{{ form.follow_up_of_id(class='form-select') }}</div>
+          <div class="mb-3">{{ form.scheduled_start.label(class='form-label') }}{{ form.scheduled_start(class='form-control') }}</div>
+          <div class="mb-3">{{ form.doctor_id.label(class='form-label') }}{{ form.doctor_id(class='form-select') }}</div>
+          <div class="mb-3">{{ form.reason.label(class='form-label') }}{{ form.reason(class='form-control', rows='3') }}</div>
+          <div class="mb-3">{{ form.notes.label(class='form-label') }}{{ form.notes(class='form-control', rows='3') }}</div>
+
+          {{ form.submit(class='btn btn-primary') }}
+          <a class="btn btn-outline-secondary" href="{{ url_for('reception.dashboard') }}">Cancel</a>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

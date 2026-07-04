@@ -36,7 +36,7 @@ def test_migrations_upgrade_to_latest_and_downgrade(tmp_path, monkeypatch):
     table_names = {row[0] for row in connection.execute("SELECT name FROM sqlite_master WHERE type='table'")}
     connection.close()
 
-    assert revision == "20260705_0013"
+    assert revision == "20260705_0014"
 
     assert "department_id" in user_columns
     assert doctor_columns["specialty_id"] == 0
@@ -54,6 +54,7 @@ def test_migrations_upgrade_to_latest_and_downgrade(tmp_path, monkeypatch):
     assert "womens_ultrasound_attachments" in table_names
     assert "medication_administrations" in table_names
     assert "nursing_care_plans" in table_names
+    assert "billing_initiations" in table_names
 
     assert "arrival_time" in appointment_columns
     assert "consultation_started_at" in appointment_columns

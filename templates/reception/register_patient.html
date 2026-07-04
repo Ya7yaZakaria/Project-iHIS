@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+{% block title %}Register Patient | iHIS{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-8">
+    <div class="d-flex justify-content-between align-items-start mb-4">
+      <div>
+        <h1 class="h2">Register patient</h1>
+        <p class="text-body-secondary">Create a quick reception patient profile.</p>
+      </div>
+      <a class="btn btn-outline-secondary" href="{{ url_for('reception.search_patient') }}">Search first</a>
+    </div>
+
+    {% if duplicate %}
+    <div class="alert alert-warning">
+      Possible duplicate:
+      <strong>{{ duplicate.first_name }} {{ duplicate.last_name }}</strong>
+      — {{ duplicate.medical_record_number }}
+      {% if duplicate.phone %} — {{ duplicate.phone }}{% endif %}
+    </div>
+    {% endif %}
+
+    <div class="card border-0 shadow-sm">
+      <div class="card-body">
+        <form method="post">
+          {{ form.hidden_tag() }}
+
+          <div class="row g-3">
+            <div class="col-md-6">{{ form.medical_record_number.label(class='form-label') }}{{ form.medical_record_number(class='form-control') }}</div>
+            <div class="col-md-6">{{ form.phone.label(class='form-label') }}{{ form.phone(class='form-control') }}</div>
+
+            <div class="col-md-6">{{ form.first_name.label(class='form-label') }}{{ form.first_name(class='form-control') }}</div>
+            <div class="col-md-6">{{ form.last_name.label(class='form-label') }}{{ form.last_name(class='form-control') }}</div>
+
+            <div class="col-md-6">{{ form.date_of_birth.label(class='form-label') }}{{ form.date_of_birth(class='form-control') }}</div>
+            <div class="col-md-6">{{ form.sex_at_birth.label(class='form-label') }}{{ form.sex_at_birth(class='form-select') }}</div>
+
+            <div class="col-md-6">{{ form.email.label(class='form-label') }}{{ form.email(class='form-control') }}</div>
+            <div class="col-md-6">{{ form.national_id.label(class='form-label') }}{{ form.national_id(class='form-control') }}<div class="form-text">Placeholder only.</div></div>
+
+            <div class="col-12">{{ form.address.label(class='form-label') }}{{ form.address(class='form-control', rows='3') }}</div>
+          </div>
+
+          <div class="mt-4">
+            {{ form.submit(class='btn btn-primary') }}
+            <a class="btn btn-outline-secondary" href="{{ url_for('reception.dashboard') }}">Cancel</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
