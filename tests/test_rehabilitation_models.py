@@ -418,3 +418,39 @@ def test_rehabilitation_service_progress_summary(session):
     assert summary["completed_sessions"] == 1
     assert summary["latest_pain_score"] == 3
     assert summary["latest_functional_score"] == 75
+
+
+def test_rehabilitation_routes_are_registered(app):
+    routes = {
+        rule.endpoint: rule.rule
+        for rule in app.url_map.iter_rules()
+        if rule.endpoint.startswith("rehabilitation.")
+    }
+
+    expected_routes = {
+        "rehabilitation.index": "/rehabilitation/",
+        "rehabilitation.patient_records": "/rehabilitation/patients/<patient_id>",
+        "rehabilitation.record_create": "/rehabilitation/patients/<patient_id>/create",
+        "rehabilitation.record_detail": "/rehabilitation/<record_id>",
+        "rehabilitation.record_edit": "/rehabilitation/<record_id>/edit",
+        "rehabilitation.assessment_create": "/rehabilitation/<record_id>/assessment/create",
+        "rehabilitation.therapy_plan_create": "/rehabilitation/<record_id>/therapy-plan/create",
+        "rehabilitation.therapy_plan_detail": "/rehabilitation/therapy-plans/<plan_id>",
+        "rehabilitation.therapy_plan_edit": "/rehabilitation/therapy-plans/<plan_id>/edit",
+        "rehabilitation.session_create": "/rehabilitation/therapy-plans/<plan_id>/sessions/create",
+        "rehabilitation.exercises": "/rehabilitation/exercises",
+        "rehabilitation.exercise_create": "/rehabilitation/exercises/create",
+        "rehabilitation.exercise_edit": "/rehabilitation/exercises/<exercise_id>/edit",
+        "rehabilitation.progress": "/rehabilitation/<record_id>/progress",
+    }
+
+    for endpoint, rule in expected_routes.items():
+        assert endpoint in routes
+
+        endpoint_rules = [
+            item.rule
+            for item in app.url_map.iter_rules()
+            if item.endpoint == endpoint
+        ]
+
+        assert rule in endpoint_rules
