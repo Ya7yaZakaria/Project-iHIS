@@ -30,7 +30,73 @@ def _validate_pain_score(value, field_name):
         return
     if value < 0 or value > 10:
         raise RehabilitationServiceError(f"{field_name} must be between 0 and 10")
+    
 
+def _validate_functional_score(value, field_name="functional_score"):
+    if value is None:
+        return
+
+    if value < 0 or value > 100:
+        raise RehabilitationServiceError(f"{field_name} must be between 0 and 100")
+
+
+def _is_locked_status(status):
+    return status in {"completed", "closed", "discharged"}
+
+
+def _ensure_record_is_open(record, action="modify rehabilitation record"):
+    if record is None:
+        raise RehabilitationServiceError("rehabilitation_record_id is invalid")
+
+    if _is_locked_status(record.status):
+        raise RehabilitationServiceError(
+            f"Cannot {action} when rehabilitation record is {record.status}"
+        )
+
+
+def _get_open_rehabilitation_record(record_id, action):
+    _validate_required(record_id, "rehabilitation_record_id")
+
+    record = db.session.get(RehabilitationRecord, record_id)
+    _ensure_record_is_open(record, action)
+
+    return record
+
+
+def _get_therapy_plan(plan_id):
+    _validate_required(plan_id, "therapy_plan_id")
+
+    plan = db.session.get(TherapyPlan, plan_id)
+
+    if plan is None:
+        raise RehabilitationServiceError("therapy_plan_id is invalid")
+
+    if plan.rehabilitation_record:
+        _ensure_record_is_open(
+            plan.rehabilitation_record,
+            "add therapy session",
+        )
+
+    return plan
+
+
+def _validate_plan_patient_matches_record(record, patient_id):
+    _validate_required(patient_id, "patient_id")
+
+    if record.patient_id != patient_id:
+        raise RehabilitationServiceError(
+            "patient_id must match the rehabilitation record patient"
+        )
+
+
+def _validate_session_patient_matches_plan(plan, patient_id):
+    _validate_required(patient_id, "patient_id")
+
+    if plan.patient_id != patient_id:
+        raise RehabilitationServiceError(
+            "patient_id must match the therapy plan patient"
+        )
+    
 
 def create_rehabilitation_record(**data):
     _validate_required(data.get("patient_id"), "patient_id")
@@ -45,6 +111,8 @@ def create_rehabilitation_record(**data):
 
 
 def update_rehabilitation_record(record, **data):
+    _ensure_record_is_open(record)
+
     if "pain_score" in data:
         _validate_pain_score(data.get("pain_score"), "pain_score")
 
@@ -68,12 +136,19 @@ def get_patient_rehabilitation_records(patient_id):
 
 def get_rehabilitation_record(record_id):
     _validate_required(record_id, "record_id")
-    return RehabilitationRecord.query.get(record_id)
+    return db.session.get(RehabilitationRecord, record_id)
 
 
 def create_initial_assessment(**data):
-    _validate_required(data.get("rehabilitation_record_id"), "rehabilitation_record_id")
+    record = _get_open_rehabilitation_record(
+        data.get("rehabilitation_record_id"),
+        "create assessment",
+    )
+
     _validate_required(data.get("assessment_date"), "assessment_date")
+    _validate_functional_score(data.get("functional_score"))
+
+    data["rehabilitation_record_id"] = record.id
 
     assessment = RehabilitationAssessment(**data)
     db.session.add(assessment)
@@ -82,6 +157,15 @@ def create_initial_assessment(**data):
 
 
 def update_initial_assessment(assessment, **data):
+    if assessment.rehabilitation_record:
+        _ensure_record_is_open(
+            assessment.rehabilitation_record,
+            "update assessment",
+        )
+
+    if "functional_score" in data:
+        _validate_functional_score(data.get("functional_score"))
+
     for key, value in data.items():
         setattr(assessment, key, value)
 
@@ -90,12 +174,19 @@ def update_initial_assessment(assessment, **data):
 
 
 def create_therapy_plan(**data):
-    _validate_required(data.get("rehabilitation_record_id"), "rehabilitation_record_id")
+    record = _get_open_rehabilitation_record(
+        data.get("rehabilitation_record_id"),
+        "create therapy plan",
+    )
+
     _validate_required(data.get("patient_id"), "patient_id")
     _validate_required(data.get("therapist_id"), "therapist_id")
     _validate_required(data.get("start_date"), "start_date")
     _validate_required(data.get("goals"), "goals")
 
+    _validate_plan_patient_matches_record(record, data.get("patient_id"))
+
+    data["rehabilitation_record_id"] = record.id
     data.setdefault("status", "active")
     data.setdefault("active", True)
 
@@ -106,6 +197,18 @@ def create_therapy_plan(**data):
 
 
 def update_therapy_plan(plan, **data):
+    if plan.rehabilitation_record:
+        _ensure_record_is_open(
+            plan.rehabilitation_record,
+            "update therapy plan",
+        )
+
+    if "patient_id" in data and plan.rehabilitation_record:
+        _validate_plan_patient_matches_record(
+            plan.rehabilitation_record,
+            data.get("patient_id"),
+        )
+
     for key, value in data.items():
         setattr(plan, key, value)
 
@@ -145,14 +248,17 @@ def generate_home_program_summary(plan):
 
 
 def add_therapy_session(**data):
-    _validate_required(data.get("therapy_plan_id"), "therapy_plan_id")
+    plan = _get_therapy_plan(data.get("therapy_plan_id"))
+
     _validate_required(data.get("patient_id"), "patient_id")
     _validate_required(data.get("therapist_id"), "therapist_id")
     _validate_required(data.get("scheduled_start"), "scheduled_start")
 
+    _validate_session_patient_matches_plan(plan, data.get("patient_id"))
     _validate_pain_score(data.get("pain_before"), "pain_before")
     _validate_pain_score(data.get("pain_after"), "pain_after")
 
+    data["therapy_plan_id"] = plan.id
     data.setdefault("status", "scheduled")
 
     session = TherapySession(**data)
@@ -279,6 +385,8 @@ def build_rehabilitation_progress(record):
         ),
         "latest_assessment_id": latest_assessment.id if latest_assessment else None,
     }
+
+
 def build_patient_rehabilitation_summary(patient):
     _validate_required(getattr(patient, "id", None), "patient_id")
 
@@ -332,6 +440,7 @@ def build_patient_rehabilitation_summary(patient):
         "latest_session": latest_session,
         "progress": build_rehabilitation_progress(latest_record),
     }
+
 
 def _average(values):
     values = [value for value in values if value is not None]

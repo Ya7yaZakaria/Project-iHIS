@@ -51,11 +51,41 @@ def test_ga_edd_cycle_day_and_bmi_calculations():
 
 
 def test_anc_links_to_pregnancy_and_nurse_is_vitals_only(session):
-    clinician,_,profile=context(session); pregnancy=create_pregnancy(profile,actor=clinician,lmp=date.today()-timedelta(days=84))
-    nurse=user(session,"whnurse","Nurse",("womens_health.record_anc_basic",))
-    anc=create_antenatal_visit(pregnancy,actor=nurse,weight_kg=65,systolic_bp=110,diastolic_bp=70,fetal_heart_rate=145)
-    assert anc.pregnancy is pregnancy and anc.pregnancy_visit.gestational_age_weeks==12
-    with pytest.raises(PermissionError): create_antenatal_visit(pregnancy,actor=nurse,assessment="Clinical decision")
+    clinician, _, profile = context(session)
+    visit_at = datetime(2026, 7, 5, 10, 0, tzinfo=timezone.utc)
+
+    pregnancy = create_pregnancy(
+        profile,
+        actor=clinician,
+        lmp=visit_at.date() - timedelta(days=84),
+    )
+
+    nurse = user(
+        session,
+        "whnurse",
+        "Nurse",
+        ("womens_health.record_anc_basic",),
+    )
+
+    anc = create_antenatal_visit(
+        pregnancy,
+        actor=nurse,
+        visit_at=visit_at,
+        weight_kg=65,
+        systolic_bp=110,
+        diastolic_bp=70,
+        fetal_heart_rate=145,
+    )
+
+    assert anc.pregnancy is pregnancy
+    assert anc.pregnancy_visit.gestational_age_weeks == 12
+
+    with pytest.raises(PermissionError):
+        create_antenatal_visit(
+            pregnancy,
+            actor=nurse,
+            assessment="Clinical decision",
+        )
 
 
 def test_ultrasound_links_and_secure_attachment(app,session):

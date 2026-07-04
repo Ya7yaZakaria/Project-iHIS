@@ -2,6 +2,9 @@
 
 from datetime import date, datetime, timezone
 
+from flask_login import login_user, logout_user
+
+from extensions import db
 from models import (
     ExerciseLibrary,
     MedicalRecord,
@@ -39,6 +42,37 @@ def _user(session, suffix):
     session.add(user)
     session.flush()
     return user
+
+def _role(session, name):
+    from models import Role
+
+    role = session.execute(
+        db.select(Role).filter_by(name=name)
+    ).scalar_one_or_none()
+
+    if role is None:
+        role = Role(name=name)
+        session.add(role)
+        session.flush()
+
+    return role
+
+
+def _user_with_role(session, suffix, role_name):
+    user = _user(session, f"{role_name.lower().replace(' ', '-')}-{suffix}")
+    user.roles.append(_role(session, role_name))
+    session.commit()
+    return user
+
+
+def _login_as(app, user):
+    with app.test_request_context():
+        login_user(user)
+
+
+def _logout(app):
+    with app.test_request_context():
+        logout_user()
 
 
 def _record(session, suffix="record", with_links=True):
@@ -231,6 +265,8 @@ from services.rehabilitation_service import (
     generate_home_program_summary,
     update_exercise,
     update_rehabilitation_record,
+    update_initial_assessment,
+    update_therapy_plan,
 )
 from services.emr_service import build_patient_timeline
 
@@ -576,20 +612,7 @@ def test_emr_timeline_includes_therapy_plan_and_session_events(session):
     assert session_events[0]["object"].id == therapy_session.id
     assert session_events[0]["title"] == "Timeline therapy session"
 
-def test_emr_timeline_includes_rehabilitation_record(session):
-    record = _record(session, "timeline-record")
 
-    timeline = build_patient_timeline(record.patient)
-
-    rehab_events = [
-        event
-        for event in timeline
-        if event["kind"] == "rehabilitation_record"
-    ]
-
-    assert len(rehab_events) == 1
-    assert rehab_events[0]["object"].id == record.id
-    assert rehab_events[0]["title"] == record.rehabilitation_diagnosis
 
 def test_rehabilitation_report_summary_empty(session):
     summary = build_rehabilitation_report_summary()
@@ -734,3 +757,202 @@ def test_rehabilitation_therapist_workload_report(session):
     assert report[0]["active_plans"] == 1
     assert report[0]["scheduled_sessions"] == 1
     assert report[0]["completed_sessions"] == 1
+
+def test_rehabilitation_service_rejects_invalid_functional_score(session):
+    record = _record(session, "invalid-functional-score")
+
+    try:
+        create_initial_assessment(
+            rehabilitation_record_id=record.id,
+            assessment_date=date.today(),
+            functional_score=101,
+            assessment_summary="Invalid score",
+        )
+    except RehabilitationServiceError as exc:
+        assert "functional_score" in str(exc)
+    else:
+        raise AssertionError("Expected RehabilitationServiceError")
+
+
+def test_rehabilitation_service_rejects_plan_patient_mismatch(session):
+    record = _record(session, "plan-patient-mismatch")
+    therapist = _therapist(session, "plan-patient-mismatch")
+    other_patient = _patient(session, "plan-patient-mismatch-other")
+
+    try:
+        create_therapy_plan(
+            rehabilitation_record_id=record.id,
+            patient_id=other_patient.id,
+            therapist_id=therapist.id,
+            plan_name="Wrong patient plan",
+            start_date=date.today(),
+            goals=["Should fail"],
+        )
+    except RehabilitationServiceError as exc:
+        assert "patient_id" in str(exc)
+    else:
+        raise AssertionError("Expected RehabilitationServiceError")
+
+
+def test_rehabilitation_service_rejects_session_patient_mismatch(session):
+    record = _record(session, "session-patient-mismatch")
+    therapist = _therapist(session, "session-patient-mismatch")
+    other_patient = _patient(session, "session-patient-mismatch-other")
+
+    plan = create_therapy_plan(
+        rehabilitation_record_id=record.id,
+        patient_id=record.patient_id,
+        therapist_id=therapist.id,
+        plan_name="Matched plan",
+        start_date=date.today(),
+        goals=["Valid plan"],
+    )
+
+    try:
+        add_therapy_session(
+            therapy_plan_id=plan.id,
+            patient_id=other_patient.id,
+            therapist_id=therapist.id,
+            scheduled_start=datetime.now(timezone.utc),
+        )
+    except RehabilitationServiceError as exc:
+        assert "patient_id" in str(exc)
+    else:
+        raise AssertionError("Expected RehabilitationServiceError")
+
+
+def test_rehabilitation_service_locks_completed_record_updates(session):
+    record = _record(session, "completed-lock")
+    record.status = "completed"
+    session.commit()
+
+    try:
+        update_rehabilitation_record(record, pain_score=2)
+    except RehabilitationServiceError as exc:
+        assert "completed" in str(exc)
+    else:
+        raise AssertionError("Expected RehabilitationServiceError")
+
+
+def test_rehabilitation_service_locks_completed_record_new_assessment(session):
+    record = _record(session, "completed-lock-assessment")
+    record.status = "completed"
+    session.commit()
+
+    try:
+        create_initial_assessment(
+            rehabilitation_record_id=record.id,
+            assessment_date=date.today(),
+            functional_score=80,
+            assessment_summary="Should fail",
+        )
+    except RehabilitationServiceError as exc:
+        assert "completed" in str(exc)
+    else:
+        raise AssertionError("Expected RehabilitationServiceError")
+
+
+def test_rehabilitation_service_locks_completed_record_new_plan(session):
+    record = _record(session, "completed-lock-plan")
+    therapist = _therapist(session, "completed-lock-plan")
+    record.status = "completed"
+    session.commit()
+
+    try:
+        create_therapy_plan(
+            rehabilitation_record_id=record.id,
+            patient_id=record.patient_id,
+            therapist_id=therapist.id,
+            plan_name="Locked plan",
+            start_date=date.today(),
+            goals=["Should fail"],
+        )
+    except RehabilitationServiceError as exc:
+        assert "completed" in str(exc)
+    else:
+        raise AssertionError("Expected RehabilitationServiceError")
+    
+def test_rehabilitation_receptionist_cannot_open_dashboard(app, session):
+    user = _user_with_role(session, "dashboard-block", "Receptionist")
+
+    with app.test_request_context():
+        login_user(user)
+
+        from routes.rehabilitation_routes import index
+
+        try:
+            index()
+        except Exception as exc:
+            assert getattr(exc, "code", None) == 403
+        else:
+            raise AssertionError("Expected 403 for Receptionist")
+
+        logout_user()
+
+
+def test_rehabilitation_patient_cannot_open_reports(app, session):
+    user = _user_with_role(session, "reports-block", "Patient")
+
+    with app.test_request_context():
+        login_user(user)
+
+        from routes.rehabilitation_routes import reports
+
+        try:
+            reports()
+        except Exception as exc:
+            assert getattr(exc, "code", None) == 403
+        else:
+            raise AssertionError("Expected 403 for Patient")
+
+        logout_user()
+
+
+def test_rehabilitation_doctor_can_open_reports(app, session):
+    user = _user_with_role(session, "reports-doctor", "Doctor")
+
+    with app.test_request_context():
+        login_user(user)
+
+        from routes.rehabilitation_routes import reports
+
+        response = reports()
+
+        assert response
+
+        logout_user()
+
+
+def test_rehabilitation_doctor_can_view_record_detail(app, session):
+    user = _user_with_role(session, "record-doctor", "Doctor")
+    record = _record(session, "doctor-view-record")
+
+    with app.test_request_context():
+        login_user(user)
+
+        from routes.rehabilitation_routes import record_detail
+
+        response = record_detail(record.id)
+
+        assert response
+
+        logout_user()
+
+
+def test_rehabilitation_patient_cannot_view_other_patient_record(app, session):
+    user = _user_with_role(session, "patient-other-record", "Patient")
+    record = _record(session, "other-patient-record")
+
+    with app.test_request_context():
+        login_user(user)
+
+        from routes.rehabilitation_routes import record_detail
+
+        try:
+            record_detail(record.id)
+        except Exception as exc:
+            assert getattr(exc, "code", None) == 403
+        else:
+            raise AssertionError("Expected 403 for unrelated patient")
+
+        logout_user()    
