@@ -1,0 +1,148 @@
+{% extends "base.html" %}
+
+{% block title %}Therapy Session{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+
+        <div>
+            <h2>Therapy Session</h2>
+            <p class="text-muted mb-0">
+                Record an individual rehabilitation therapy session.
+            </p>
+        </div>
+
+        {% if plan %}
+        <a class="btn btn-outline-secondary"
+           href="{{ url_for('rehabilitation.therapy_plan_detail', plan_id=plan.id) }}">
+            Back
+        </a>
+        {% else %}
+        <a class="btn btn-outline-secondary"
+           href="{{ url_for('rehabilitation.record_detail', record_id=record.id) }}">
+            Back
+        </a>
+        {% endif %}
+
+    </div>
+
+    <div class="card shadow-sm">
+
+        <div class="card-body">
+
+            <form method="POST">
+
+                {{ form.hidden_tag() }}
+
+                <div class="row g-3">
+
+                    <div class="col-md-6">
+                        {{ form.therapist_id.label(class="form-label") }}
+                        {{ form.therapist_id(class="form-select") }}
+                    </div>
+
+                    <div class="col-md-6">
+                        {{ form.therapist_user_id.label(class="form-label") }}
+                        {{ form.therapist_user_id(class="form-select") }}
+                    </div>
+
+                    <div class="col-md-6">
+                        {{ form.session_date.label(class="form-label") }}
+                        {{ form.session_date(class="form-control") }}
+                    </div>
+
+                    <div class="col-md-6">
+                        {{ form.scheduled_start.label(class="form-label") }}
+                        {{ form.scheduled_start(class="form-control") }}
+                    </div>
+
+                    <div class="col-md-4">
+                        {{ form.duration_minutes.label(class="form-label") }}
+                        {{ form.duration_minutes(class="form-control") }}
+                    </div>
+
+                    <div class="col-md-4">
+                        {{ form.session_type.label(class="form-label") }}
+                        {{ form.session_type(class="form-control") }}
+                    </div>
+
+                    <div class="col-md-4">
+                        {{ form.status.label(class="form-label") }}
+                        {{ form.status(class="form-select") }}
+                    </div>
+
+                    <div class="col-md-6">
+                        {{ form.pain_before.label(class="form-label") }}
+                        {{ form.pain_before(class="form-control") }}
+                    </div>
+
+                    <div class="col-md-6">
+                        {{ form.pain_after.label(class="form-label") }}
+                        {{ form.pain_after(class="form-control") }}
+                    </div>
+
+                    <div class="col-12">
+                        {{ form.interventions.label(class="form-label") }}
+                        {{ form.interventions(class="form-control", rows="3") }}
+                    </div>
+
+                    <div class="col-12">
+                        {{ form.modalities_used.label(class="form-label") }}
+                        {{ form.modalities_used(class="form-control", rows="3") }}
+                    </div>
+
+                    <div class="col-12">
+                        {{ form.exercises_performed.label(class="form-label") }}
+                        {{ form.exercises_performed(class="form-control", rows="3") }}
+                    </div>
+
+                    <div class="col-12">
+                        {{ form.response.label(class="form-label") }}
+                        {{ form.response(class="form-control", rows="3") }}
+                    </div>
+
+                    <div class="col-12">
+                        {{ form.progress_notes.label(class="form-label") }}
+                        {{ form.progress_notes(class="form-control", rows="3") }}
+                    </div>
+
+                    <div class="col-md-6">
+                        {{ form.patient_tolerance.label(class="form-label") }}
+                        {{ form.patient_tolerance(class="form-control") }}
+                    </div>
+
+                    <div class="col-md-6">
+                        {{ form.next_session_plan.label(class="form-label") }}
+                        {{ form.next_session_plan(class="form-control") }}
+                    </div>
+
+                </div>
+
+                <div class="mt-4 d-flex justify-content-end gap-2">
+
+                    {% if plan %}
+                    <a class="btn btn-outline-secondary"
+                       href="{{ url_for('rehabilitation.therapy_plan_detail', plan_id=plan.id) }}">
+                        Cancel
+                    </a>
+                    {% else %}
+                    <a class="btn btn-outline-secondary"
+                       href="{{ url_for('rehabilitation.record_detail', record_id=record.id) }}">
+                        Cancel
+                    </a>
+                    {% endif %}
+
+                    {{ form.submit(class="btn btn-primary") }}
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+</div>
+{% endblock %}

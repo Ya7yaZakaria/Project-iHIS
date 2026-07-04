@@ -1,0 +1,227 @@
+{% extends "base.html" %}
+
+{% block title %}Patient Rehabilitation{% endblock %}
+
+{% block content %}
+
+<div class="container py-4">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+
+        <div>
+
+            <h2>
+                {{ patient.first_name }} {{ patient.last_name }}
+            </h2>
+
+            <p class="text-muted mb-0">
+                Rehabilitation Records
+            </p>
+
+        </div>
+
+        {% if form is defined %}
+        <a class="btn btn-primary"
+           href="{{ url_for('rehabilitation.record_create', patient_id=patient.id) }}">
+            New Rehabilitation Record
+        </a>
+        {% endif %}
+
+    </div>
+
+    {% if record is defined %}
+
+    <div class="card shadow-sm mb-4">
+
+        <div class="card-header">
+            Current Rehabilitation Record
+        </div>
+
+        <div class="card-body">
+
+            <div class="row">
+
+                <div class="col-md-6 mb-3">
+
+                    <strong>Referral Source</strong><br>
+
+                    {{ record.referral_source or "-" }}
+
+                </div>
+
+                <div class="col-md-6 mb-3">
+
+                    <strong>Status</strong><br>
+
+                    {{ record.status }}
+
+                </div>
+
+                <div class="col-md-6 mb-3">
+
+                    <strong>Chief Complaint</strong><br>
+
+                    {{ record.chief_complaint or "-" }}
+
+                </div>
+
+                <div class="col-md-6 mb-3">
+
+                    <strong>Pain Score</strong><br>
+
+                    {{ record.pain_score if record.pain_score is not none else "-" }}
+
+                </div>
+
+                <div class="col-md-6 mb-3">
+
+                    <strong>Mobility Status</strong><br>
+
+                    {{ record.mobility_status or "-" }}
+
+                </div>
+
+                <div class="col-md-6 mb-3">
+
+                    <strong>Diagnosis</strong><br>
+
+                    {{ record.rehabilitation_diagnosis or "-" }}
+
+                </div>
+
+                <div class="col-12">
+
+                    <strong>Therapy Goals</strong>
+
+                    <div class="mt-2">
+
+                        {{ record.therapy_goals or "-" }}
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    {% endif %}
+
+    <div class="card shadow-sm">
+
+        <div class="card-header">
+
+            Rehabilitation Records
+
+        </div>
+
+        <div class="list-group list-group-flush">
+
+            {% for item in records %}
+
+            <a class="list-group-item list-group-item-action"
+               href="{{ url_for('rehabilitation.record_detail', record_id=item.id) }}">
+
+                <div class="d-flex justify-content-between">
+
+                    <div>
+
+                        <strong>
+
+                            {{ item.rehabilitation_diagnosis or "Rehabilitation Record" }}
+
+                        </strong>
+
+                        <br>
+
+                        <small class="text-muted">
+
+                            {{ item.chief_complaint or "-" }}
+
+                        </small>
+
+                    </div>
+
+                    <span class="badge bg-primary">
+
+                        {{ item.status }}
+
+                    </span>
+
+                </div>
+
+            </a>
+
+            {% else %}
+
+            <div class="list-group-item text-muted">
+
+                No rehabilitation records available.
+
+            </div>
+
+            {% endfor %}
+
+        </div>
+
+    </div>
+
+    {% if progress is defined %}
+
+    <div class="card shadow-sm mt-4">
+
+        <div class="card-header">
+
+            Progress Summary
+
+        </div>
+
+        <div class="card-body">
+
+            <div class="row">
+
+                <div class="col-md-3">
+
+                    <strong>Active Plans</strong>
+
+                    <div>{{ progress.active_plans }}</div>
+
+                </div>
+
+                <div class="col-md-3">
+
+                    <strong>Completed Sessions</strong>
+
+                    <div>{{ progress.completed_sessions }}</div>
+
+                </div>
+
+                <div class="col-md-3">
+
+                    <strong>Pain Score</strong>
+
+                    <div>{{ progress.latest_pain_score if progress.latest_pain_score is not none else "-" }}</div>
+
+                </div>
+
+                <div class="col-md-3">
+
+                    <strong>Functional Score</strong>
+
+                    <div>{{ progress.latest_functional_score if progress.latest_functional_score is not none else "-" }}</div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    {% endif %}
+
+</div>
+
+{% endblock %}

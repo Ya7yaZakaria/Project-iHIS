@@ -1,0 +1,138 @@
+{% extends "base.html" %}
+
+{% block title %}Exercise Library{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+
+        <div>
+            <h2>
+                {% if exercise %}
+                    Edit Exercise
+                {% else %}
+                    New Exercise
+                {% endif %}
+            </h2>
+
+            <p class="text-muted mb-0">
+                Exercise Library Management
+            </p>
+        </div>
+
+        <a class="btn btn-outline-secondary"
+           href="{{ url_for('rehabilitation.exercises') }}">
+            Back
+        </a>
+
+    </div>
+
+    <div class="card shadow-sm">
+
+        <div class="card-body">
+
+            <form method="POST">
+
+                {{ form.hidden_tag() }}
+
+                <div class="row g-3">
+
+                    <div class="col-md-3">
+                        {{ form.code.label(class="form-label") }}
+                        {{ form.code(class="form-control") }}
+                    </div>
+
+                    <div class="col-md-9">
+                        {{ form.exercise_name.label(class="form-label") }}
+                        {{ form.exercise_name(class="form-control") }}
+                    </div>
+
+                    <div class="col-md-4">
+                        {{ form.category.label(class="form-label") }}
+                        {{ form.category(class="form-control") }}
+                    </div>
+
+                    <div class="col-md-4">
+                        {{ form.target_region.label(class="form-label") }}
+                        {{ form.target_region(class="form-control") }}
+                    </div>
+
+                    <div class="col-md-4">
+                        {{ form.frequency.label(class="form-label") }}
+                        {{ form.frequency(class="form-control") }}
+                    </div>
+
+                    <div class="col-md-6">
+                        {{ form.repetitions.label(class="form-label") }}
+                        {{ form.repetitions(class="form-control") }}
+                    </div>
+
+                    <div class="col-md-6">
+                        {{ form.sets.label(class="form-label") }}
+                        {{ form.sets(class="form-control") }}
+                    </div>
+
+                    <div class="col-12">
+                        {{ form.indication.label(class="form-label") }}
+                        {{ form.indication(class="form-control", rows="3") }}
+                    </div>
+
+                    <div class="col-12">
+                        {{ form.contraindications.label(class="form-label") }}
+                        {{ form.contraindications(class="form-control", rows="3") }}
+                    </div>
+
+                    <div class="col-12">
+                        {{ form.instructions.label(class="form-label") }}
+                        {{ form.instructions(class="form-control", rows="4") }}
+                    </div>
+
+                    <div class="col-md-6">
+                        {{ form.image_path.label(class="form-label") }}
+                        {{ form.image_path(class="form-control") }}
+                    </div>
+
+                    <div class="col-md-6">
+                        {{ form.video_path.label(class="form-label") }}
+                        {{ form.video_path(class="form-control") }}
+                    </div>
+
+                    <div class="col-12">
+                        {{ form.media_placeholder.label(class="form-label") }}
+                        {{ form.media_placeholder(class="form-control") }}
+                    </div>
+
+                    <div class="col-md-4">
+
+                        <div class="form-check mt-4">
+
+                            {{ form.active(class="form-check-input") }}
+
+                            {{ form.active.label(class="form-check-label") }}
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <div class="mt-4 d-flex justify-content-end gap-2">
+
+                    <a class="btn btn-outline-secondary"
+                       href="{{ url_for('rehabilitation.exercises') }}">
+                        Cancel
+                    </a>
+
+                    {{ form.submit(class="btn btn-primary") }}
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+</div>
+{% endblock %}

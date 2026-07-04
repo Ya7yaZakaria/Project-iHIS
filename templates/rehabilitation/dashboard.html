@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+
+{% block title %}Rehabilitation Dashboard{% endblock %}
+
+{% block content %}
+
+<div class="container py-4">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+
+        <div>
+            <h2>Rehabilitation Dashboard</h2>
+            <p class="text-muted mb-0">
+                Rehabilitation records, therapy plans and exercise library.
+            </p>
+        </div>
+
+    </div>
+
+    <div class="row g-3 mb-4">
+
+        <div class="col-md-4">
+
+            <div class="card shadow-sm">
+
+                <div class="card-body">
+
+                    <h6 class="text-muted">Rehabilitation Records</h6>
+
+                    <h2>{{ records|length }}</h2>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="col-md-4">
+
+            <div class="card shadow-sm">
+
+                <div class="card-body">
+
+                    <h6 class="text-muted">Active Therapy Plans</h6>
+
+                    <h2>{{ active_plans|length }}</h2>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="col-md-4">
+
+            <div class="card shadow-sm">
+
+                <div class="card-body">
+
+                    <h6 class="text-muted">Exercise Library</h6>
+
+                    <h2>{{ exercises|length }}</h2>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <div class="card shadow-sm">
+
+        <div class="card-header">
+
+            Recent Rehabilitation Records
+
+        </div>
+
+        <div class="list-group list-group-flush">
+
+            {% for record in records %}
+
+            <a class="list-group-item list-group-item-action"
+               href="{{ url_for('rehabilitation.record_detail', record_id=record.id) }}">
+
+                <strong>
+                    {{ record.patient.first_name }} {{ record.patient.last_name }}
+                </strong>
+
+                <br>
+
+                <small class="text-muted">
+
+                    {{ record.rehabilitation_diagnosis or "No diagnosis" }}
+
+                </small>
+
+            </a>
+
+            {% else %}
+
+            <div class="list-group-item text-muted">
+
+                No rehabilitation records found.
+
+            </div>
+
+            {% endfor %}
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+
+{% block title %}Rehabilitation Progress{% endblock %}
+
+{% block content %}
+
+<div class="container py-4">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+
+        <div>
+
+            <h2>Progress Summary</h2>
+
+            <p class="text-muted mb-0">
+
+                Rehabilitation outcome tracking
+
+            </p>
+
+        </div>
+
+        <a class="btn btn-outline-secondary"
+           href="{{ url_for('rehabilitation.record_detail',
+                            record_id=record.id) }}">
+
+            Back
+
+        </a>
+
+    </div>
+
+    <div class="row g-3">
+
+        <div class="col-md-3">
+
+            <div class="card shadow-sm">
+
+                <div class="card-body text-center">
+
+                    <div class="text-muted">
+
+                        Active Plans
+
+                    </div>
+
+                    <h2>{{ progress.active_plans }}</h2>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="col-md-3">
+
+            <div class="card shadow-sm">
+
+                <div class="card-body text-center">
+
+                    <div class="text-muted">
+
+                        Completed Sessions
+
+                    </div>
+
+                    <h2>{{ progress.completed_sessions }}</h2>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="col-md-3">
+
+            <div class="card shadow-sm">
+
+                <div class="card-body text-center">
+
+                    <div class="text-muted">
+
+                        Latest Pain
+
+                    </div>
+
+                    <h2>
+
+                        {{ progress.latest_pain_score if progress.latest_pain_score is not none else "-" }}
+
+                    </h2>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="col-md-3">
+
+            <div class="card shadow-sm">
+
+                <div class="card-body text-center">
+
+                    <div class="text-muted">
+
+                        Functional Score
+
+                    </div>
+
+                    <h2>
+
+                        {{ progress.latest_functional_score if progress.latest_functional_score is not none else "-" }}
+
+                    </h2>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

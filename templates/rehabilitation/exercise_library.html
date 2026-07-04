@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+
+{% block title %}Exercise Library{% endblock %}
+
+{% block content %}
+
+<div class="container py-4">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+
+        <div>
+
+            <h2>Exercise Library</h2>
+
+            <p class="text-muted mb-0">
+                Rehabilitation exercise catalogue.
+            </p>
+
+        </div>
+
+        <a class="btn btn-primary"
+           href="{{ url_for('rehabilitation.exercise_create') }}">
+            New Exercise
+        </a>
+
+    </div>
+
+    <div class="card shadow-sm">
+
+        <div class="card-body">
+
+            <form method="get" class="row g-3 mb-4">
+
+                <div class="col-md-8">
+
+                    <input
+                        class="form-control"
+                        type="search"
+                        name="search"
+                        value="{{ search }}"
+                        placeholder="Search exercise">
+
+                </div>
+
+                <div class="col-md-4">
+
+                    <button class="btn btn-outline-primary w-100">
+                        Search
+                    </button>
+
+                </div>
+
+            </form>
+
+            <div class="table-responsive">
+
+                <table class="table table-hover align-middle">
+
+                    <thead>
+
+                        <tr>
+
+                            <th>Code</th>
+                            <th>Exercise</th>
+                            <th>Category</th>
+                            <th>Target</th>
+                            <th></th>
+
+                        </tr>
+
+                    </thead>
+
+                    <tbody>
+
+                    {% for exercise in exercises %}
+
+                        <tr>
+
+                            <td>{{ exercise.code }}</td>
+
+                            <td>{{ exercise.name }}</td>
+
+                            <td>{{ exercise.category }}</td>
+
+                            <td>{{ exercise.target_region }}</td>
+
+                            <td class="text-end">
+
+                                <a class="btn btn-sm btn-outline-primary"
+                                   href="{{ url_for('rehabilitation.exercise_edit',
+                                                    exercise_id=exercise.id) }}">
+
+                                    Edit
+
+                                </a>
+
+                            </td>
+
+                        </tr>
+
+                    {% else %}
+
+                        <tr>
+
+                            <td colspan="5"
+                                class="text-center text-muted">
+
+                                No exercises found.
+
+                            </td>
+
+                        </tr>
+
+                    {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

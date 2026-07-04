@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+
+{% block title %}Rehabilitation Assessment{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2>Rehabilitation Assessment</h2>
+            <p class="text-muted mb-0">
+                Record functional and physical assessment findings.
+            </p>
+        </div>
+
+        <a class="btn btn-outline-secondary"
+           href="{{ url_for('rehabilitation.record_detail', record_id=record.id) }}">
+            Back
+        </a>
+    </div>
+
+    <div class="card shadow-sm">
+
+        <div class="card-body">
+
+            <form method="POST">
+
+                {{ form.hidden_tag() }}
+
+                <div class="row g-3">
+
+                    <div class="col-md-4">
+                        {{ form.assessment_date.label(class="form-label") }}
+                        {{ form.assessment_date(class="form-control") }}
+                    </div>
+
+                    <div class="col-md-8">
+                        {{ form.functional_score.label(class="form-label") }}
+                        {{ form.functional_score(class="form-control") }}
+                    </div>
+
+                    <div class="col-12">
+                        {{ form.physical_exam.label(class="form-label") }}
+                        {{ form.physical_exam(class="form-control", rows="3") }}
+                    </div>
+
+                    <div class="col-md-6">
+                        {{ form.range_of_motion.label(class="form-label") }}
+                        {{ form.range_of_motion(class="form-control", rows="3") }}
+                    </div>
+
+                    <div class="col-md-6">
+                        {{ form.muscle_power.label(class="form-label") }}
+                        {{ form.muscle_power(class="form-control", rows="3") }}
+                    </div>
+
+                    <div class="col-md-6">
+                        {{ form.balance_assessment.label(class="form-label") }}
+                        {{ form.balance_assessment(class="form-control", rows="3") }}
+                    </div>
+
+                    <div class="col-md-6">
+                        {{ form.gait_assessment.label(class="form-label") }}
+                        {{ form.gait_assessment(class="form-control", rows="3") }}
+                    </div>
+
+                    <div class="col-12">
+                        {{ form.neurological_findings.label(class="form-label") }}
+                        {{ form.neurological_findings(class="form-control", rows="3") }}
+                    </div>
+
+                    <div class="col-12">
+                        {{ form.red_flags.label(class="form-label") }}
+                        {{ form.red_flags(class="form-control", rows="3") }}
+                    </div>
+
+                    <div class="col-12">
+                        {{ form.assessment_summary.label(class="form-label") }}
+                        {{ form.assessment_summary(class="form-control", rows="4") }}
+                    </div>
+
+                </div>
+
+                <div class="mt-4 d-flex justify-content-end gap-2">
+
+                    <a class="btn btn-outline-secondary"
+                       href="{{ url_for('rehabilitation.record_detail', record_id=record.id) }}">
+                        Cancel
+                    </a>
+
+                    {{ form.submit(class="btn btn-primary") }}
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+</div>
+{% endblock %}
