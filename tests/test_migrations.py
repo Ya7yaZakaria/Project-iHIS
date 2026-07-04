@@ -27,10 +27,16 @@ def test_migrations_upgrade_to_latest_and_downgrade(tmp_path, monkeypatch):
     appointment_foreign_keys = {(row[3], row[2], row[4]) for row in connection.execute("PRAGMA foreign_key_list(appointments)")}
     radiology_order_columns = {row[1] for row in connection.execute("PRAGMA table_info(radiology_orders)")}
     radiology_report_columns = {row[1] for row in connection.execute("PRAGMA table_info(radiology_reports)")}
+    dental_record_columns = {row[1] for row in connection.execute("PRAGMA table_info(dental_records)")}
+    dental_chart_columns = {row[1] for row in connection.execute("PRAGMA table_info(dental_charts)")}
+    dental_procedure_columns = {row[1] for row in connection.execute("PRAGMA table_info(dental_procedures)")}
+    orthodontic_columns = {row[1] for row in connection.execute("PRAGMA table_info(orthodontic_cases)")}
+    ultrasound_columns = {row[1] for row in connection.execute("PRAGMA table_info(womens_ultrasound_reports)")}
+    lab_test_indexes = {row[1]: row[2] for row in connection.execute("PRAGMA index_list(lab_tests)")}
     table_names = {row[0] for row in connection.execute("SELECT name FROM sqlite_master WHERE type='table'")}
     connection.close()
 
-    assert revision == "20260703_0010"
+    assert revision == "20260704_0011"
 
     assert "department_id" in user_columns
     assert doctor_columns["specialty_id"] == 0
@@ -70,6 +76,13 @@ def test_migrations_upgrade_to_latest_and_downgrade(tmp_path, monkeypatch):
     assert "verified_at" in radiology_report_columns
     assert "reviewed_at" in radiology_report_columns
     assert "is_abnormal" in radiology_report_columns
+
+    assert {"oral_hygiene_history", "allergies", "medical_alerts", "dental_complaints", "dental_diagnosis"}.issubset(dental_record_columns)
+    assert {"caries", "missing_teeth", "filled_teeth", "crown_bridge", "implant", "root_canal", "mobility", "periodontal_notes"}.issubset(dental_chart_columns)
+    assert {"diagnosis", "treatment_details", "materials_used", "dentist_notes", "follow_up_date", "cost_placeholder"}.issubset(dental_procedure_columns)
+    assert {"malocclusion_class", "progress_notes", "follow_up_visits"}.issubset(orthodontic_columns)
+    assert "attachments" not in ultrasound_columns
+    assert lab_test_indexes["ix_lab_tests_code"] == 1
 
     downgrade = runner.invoke(args=["db", "downgrade", "base"])
     assert downgrade.exit_code == 0, downgrade.output
