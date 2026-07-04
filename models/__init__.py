@@ -19,8 +19,10 @@ from .dentistry import (DentalChart, DentalImage, DentalProcedure, DentalRecord,
                         DentalSpecialty, Dentist, OrthodonticCase)
 from .rehabilitation import (CareTeam, ExerciseLibrary, FunctionalOutcome,
                              MultidisciplinaryCase, PhysicalTherapist, Referral,
-                             RehabilitationProgress, TherapyAssessment,
-                             TherapyExercise, TherapyPlan, TherapySession, care_team_members)
+                             RehabilitationAssessment, RehabilitationProgress,
+                             RehabilitationRecord, TherapyAssessment,
+                             TherapyExercise, TherapyPlan, TherapySession,
+                             care_team_members)
 from .womens_health import (AntenatalVisit, DeliveryRecord, FetalBiometry,
                             FetalDopplerRecord, FertilityMedicationProtocol,
                             FollicleMeasurement, FolliculometryRecord,

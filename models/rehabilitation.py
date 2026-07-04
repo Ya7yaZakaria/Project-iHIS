@@ -1,17 +1,180 @@
-"""Physical therapy, rehabilitation, referral, and care-team models."""
+"""Rehabilitation records, assessments, plans, sessions, and exercises."""
 
 from extensions import db
+from sqlalchemy.orm import synonym
+
 from .base import BaseModel
 
 
 care_team_members = db.Table(
     "care_team_members",
-    db.Column("care_team_id", db.String(36), db.ForeignKey("care_teams.id", ondelete="CASCADE"), primary_key=True),
-    db.Column("user_id", db.String(36), db.ForeignKey("users.id", ondelete="CASCADE"), primary_key=True),
+    db.Column(
+        "care_team_id",
+        db.String(36),
+        db.ForeignKey("care_teams.id", ondelete="CASCADE"),
+        primary_key=True,
+    ),
+    db.Column(
+        "user_id",
+        db.String(36),
+        db.ForeignKey("users.id", ondelete="CASCADE"),
+        primary_key=True,
+    ),
     db.Column("member_role", db.String(80), nullable=False, default="member"),
 )
 
 
+class RehabilitationRecord(BaseModel):
+    __tablename__ = "rehabilitation_records"
+
+    patient_id = db.Column(db.String(36), db.ForeignKey("patients.id"), nullable=False, index=True)
+    visit_id = db.Column(db.String(36), db.ForeignKey("medical_records.id"), index=True)
+    doctor_id = db.Column(db.String(36), db.ForeignKey("users.id"), index=True)
+    referral_source = db.Column(db.String(160))
+    chief_complaint = db.Column(db.Text)
+    functional_limitation = db.Column(db.Text)
+    pain_score = db.Column(db.Integer)
+    mobility_status = db.Column(db.String(120))
+    rehabilitation_diagnosis = db.Column(db.Text)
+    therapy_goals = db.Column(db.Text)
+    status = db.Column(db.String(30), nullable=False, default="active", index=True)
+
+    patient = db.relationship("Patient")
+    visit = db.relationship("MedicalRecord")
+    doctor = db.relationship("User", foreign_keys=[doctor_id])
+    assessments = db.relationship(
+        "RehabilitationAssessment",
+        back_populates="rehabilitation_record",
+        cascade="all, delete-orphan",
+    )
+    therapy_plans = db.relationship(
+        "TherapyPlan",
+        back_populates="rehabilitation_record",
+        cascade="all, delete-orphan",
+    )
+
+
+class RehabilitationAssessment(BaseModel):
+    __tablename__ = "rehabilitation_assessments"
+
+    rehabilitation_record_id = db.Column(
+        db.String(36),
+        db.ForeignKey("rehabilitation_records.id"),
+        nullable=False,
+        index=True,
+    )
+    assessment_date = db.Column(db.Date, nullable=False, index=True)
+    physical_exam = db.Column(db.Text)
+    range_of_motion = db.Column(db.Text)
+    muscle_power = db.Column(db.Text)
+    balance_assessment = db.Column(db.Text)
+    gait_assessment = db.Column(db.Text)
+    neurological_findings = db.Column(db.Text)
+    red_flags = db.Column(db.Text)
+    functional_score = db.Column(db.Numeric(8, 2))
+    assessment_summary = db.Column(db.Text)
+
+    rehabilitation_record = db.relationship(
+        "RehabilitationRecord",
+        back_populates="assessments",
+    )
+
+
+class TherapyPlan(BaseModel):
+    __tablename__ = "therapy_plans"
+
+    patient_id = db.Column(db.String(36), db.ForeignKey("patients.id"), nullable=False, index=True)
+    therapist_id = db.Column(db.String(36), db.ForeignKey("physical_therapists.id"), nullable=False, index=True)
+    assessment_id = db.Column(db.String(36), db.ForeignKey("therapy_assessments.id"), index=True)
+    rehabilitation_record_id = db.Column(
+        db.String(36),
+        db.ForeignKey("rehabilitation_records.id"),
+        index=True,
+    )
+    plan_name = db.Column(db.String(160), index=True)
+    start_date = db.Column(db.Date, nullable=False, index=True)
+    end_date = db.Column(db.Date)
+    goals = db.Column(db.JSON, nullable=False)
+    interventions = db.Column(db.JSON)
+    frequency = db.Column(db.String(120))
+    duration = db.Column(db.String(120))
+    modalities = db.Column(db.Text)
+    exercise_program = db.Column(db.Text)
+    home_program = db.Column(db.Text)
+    review_date = db.Column(db.Date, index=True)
+    discharge_criteria = db.Column(db.Text)
+    active = db.Column(db.Boolean, nullable=False, default=True, index=True)
+    status = db.Column(db.String(30), nullable=False, default="active", index=True)
+
+    patient = db.relationship("Patient")
+    therapist = db.relationship("PhysicalTherapist")
+    assessment = db.relationship("TherapyAssessment")
+    rehabilitation_record = db.relationship(
+        "RehabilitationRecord",
+        back_populates="therapy_plans",
+    )
+    sessions = db.relationship(
+        "TherapySession",
+        back_populates="therapy_plan",
+        cascade="all, delete-orphan",
+    )
+    exercises = db.relationship("TherapyExercise", back_populates="plan")
+
+
+class TherapySession(BaseModel):
+    __tablename__ = "therapy_sessions"
+
+    patient_id = db.Column(db.String(36), db.ForeignKey("patients.id"), nullable=False, index=True)
+    therapy_plan_id = db.Column(
+        db.String(36),
+        db.ForeignKey("therapy_plans.id"),
+        index=True,
+    )
+    therapist_id = db.Column(db.String(36), db.ForeignKey("physical_therapists.id"), nullable=False, index=True)
+    therapist_user_id = db.Column(db.String(36), db.ForeignKey("users.id"), index=True)
+    scheduled_start = db.Column(db.DateTime(timezone=True), nullable=False, index=True)
+    session_date = db.Column(db.DateTime(timezone=True), index=True)
+    duration_minutes = db.Column(db.Integer)
+    session_type = db.Column(db.String(60), nullable=False, default="individual")
+    interventions = db.Column(db.JSON)
+    response = db.Column(db.Text)
+    status = db.Column(db.String(30), nullable=False, default="scheduled", index=True)
+    pain_before = db.Column(db.Integer)
+    pain_after = db.Column(db.Integer)
+    modalities_used = db.Column(db.Text)
+    exercises_performed = db.Column(db.Text)
+    progress_notes = db.Column(db.Text)
+    patient_tolerance = db.Column(db.Text)
+    next_session_plan = db.Column(db.Text)
+
+    therapy_plan = db.relationship("TherapyPlan", back_populates="sessions")
+    patient = db.relationship("Patient")
+    therapist = db.relationship("PhysicalTherapist", foreign_keys=[therapist_id])
+    therapist_user = db.relationship("User", foreign_keys=[therapist_user_id])
+
+
+class ExerciseLibrary(BaseModel):
+    __tablename__ = "exercise_library"
+
+    code = db.Column(db.String(50), unique=True, index=True)
+    name = db.Column(db.String(160), nullable=False, index=True)
+    exercise_name = synonym("name")
+    category = db.Column(db.String(80), nullable=False, index=True)
+    target_region = db.Column(db.String(120), index=True)
+    indication = db.Column(db.Text)
+    contraindications = db.Column(db.JSON)
+    instructions = db.Column(db.Text, nullable=False)
+    image_path = db.Column(db.String(255))
+    video_path = db.Column(db.String(255))
+    repetitions = db.Column(db.Integer)
+    sets = db.Column(db.Integer)
+    frequency = db.Column(db.String(120))
+    media_placeholder = db.Column(db.String(255))
+    active = db.Column(db.Boolean, nullable=False, default=True, index=True)
+
+
+# Existing cross-module models remain registered because EMR and user-management
+# depend on them. Sprint 12.1 does not otherwise change their schema.
 class PhysicalTherapist(BaseModel):
     __tablename__ = "physical_therapists"
     user_id = db.Column(db.String(36), db.ForeignKey("users.id"), nullable=False, unique=True, index=True)
@@ -36,46 +199,6 @@ class TherapyAssessment(BaseModel):
     balance = db.Column(db.JSON)
     gait = db.Column(db.JSON)
     functional_summary = db.Column(db.Text)
-
-
-class TherapyPlan(BaseModel):
-    __tablename__ = "therapy_plans"
-    patient_id = db.Column(db.String(36), db.ForeignKey("patients.id"), nullable=False, index=True)
-    therapist_id = db.Column(db.String(36), db.ForeignKey("physical_therapists.id"), nullable=False, index=True)
-    assessment_id = db.Column(db.String(36), db.ForeignKey("therapy_assessments.id"), index=True)
-    start_date = db.Column(db.Date, nullable=False, index=True)
-    end_date = db.Column(db.Date)
-    goals = db.Column(db.JSON, nullable=False)
-    interventions = db.Column(db.JSON)
-    frequency = db.Column(db.String(120))
-    status = db.Column(db.String(30), nullable=False, default="active", index=True)
-    exercises = db.relationship("TherapyExercise", back_populates="plan")
-    sessions = db.relationship("TherapySession", back_populates="plan")
-
-
-class TherapySession(BaseModel):
-    __tablename__ = "therapy_sessions"
-    patient_id = db.Column(db.String(36), db.ForeignKey("patients.id"), nullable=False, index=True)
-    therapist_id = db.Column(db.String(36), db.ForeignKey("physical_therapists.id"), nullable=False, index=True)
-    therapy_plan_id = db.Column(db.String(36), db.ForeignKey("therapy_plans.id"), index=True)
-    scheduled_start = db.Column(db.DateTime(timezone=True), nullable=False, index=True)
-    duration_minutes = db.Column(db.Integer)
-    session_type = db.Column(db.String(60), nullable=False, default="individual")
-    interventions = db.Column(db.JSON)
-    response = db.Column(db.Text)
-    status = db.Column(db.String(30), nullable=False, default="scheduled", index=True)
-    plan = db.relationship("TherapyPlan", back_populates="sessions")
-
-
-class ExerciseLibrary(BaseModel):
-    __tablename__ = "exercise_library"
-    code = db.Column(db.String(50), unique=True, index=True)
-    name = db.Column(db.String(160), nullable=False, index=True)
-    category = db.Column(db.String(80), nullable=False, index=True)
-    instructions = db.Column(db.Text, nullable=False)
-    image_path = db.Column(db.String(255))
-    video_path = db.Column(db.String(255))
-    contraindications = db.Column(db.JSON)
 
 
 class TherapyExercise(BaseModel):
