@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+{% block title %}Radiology Reports | {{ patient.first_name }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between mb-4">
+  <div>
+    <h1 class="h2">Radiology reports</h1>
+    <p>{{ patient.first_name }} {{ patient.last_name }} · {{ patient.medical_record_number }}</p>
+  </div>
+</div>
+
+{% for report in reports %}
+<div class="card border-{{ 'danger' if report.is_critical else '0' }} shadow-sm mb-3">
+  <div class="card-body">
+    <div class="d-flex justify-content-between">
+      <h2 class="h5">{{ report.order.modality }} — {{ report.order.body_part }}</h2>
+      <span class="badge text-bg-{{ 'danger' if report.is_critical else 'warning' if report.is_abnormal else 'success' }}">
+        {{ 'Critical' if report.is_critical else 'Abnormal' if report.is_abnormal else 'Normal' }}
+      </span>
+    </div>
+
+    <p class="mb-1"><strong>Impression:</strong> {{ report.impression or '—' }}</p>
+    <p class="mb-1"><strong>Findings:</strong> {{ report.findings or '—' }}</p>
+
+    {% if report.recommendations %}
+    <p class="mb-1"><strong>Recommendations:</strong> {{ report.recommendations }}</p>
+    {% endif %}
+
+    <p class="mb-0 text-body-secondary">
+      Verified {{ report.verified_at.strftime('%Y-%m-%d %H:%M') if report.verified_at else '' }}
+    </p>
+
+    {% if report.order.attachments %}
+    <hr>
+    {% for attachment in report.order.attachments %}
+      <a class="btn btn-sm btn-outline-secondary"
+         href="{{ url_for('radiology.attachment', order_id=report.order.id, attachment_id=attachment.id) }}">
+        {{ attachment.original_name }}
+      </a>
+    {% endfor %}
+    {% endif %}
+  </div>
+</div>
+{% else %}
+<div class="alert alert-info">No verified radiology reports are available.</div>
+{% endfor %}
+{% endblock %}

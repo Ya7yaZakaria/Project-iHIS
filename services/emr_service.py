@@ -1,6 +1,7 @@
 """Central EMR workflows, access policy, timeline, and secure uploads."""
 
 import hashlib
+from decimal import Decimal
 import mimetypes
 from datetime import datetime, timezone
 from pathlib import Path
@@ -15,7 +16,7 @@ from extensions import db
 from models import (Appointment, CareTeam, Diagnosis, Doctor, LabOrder,
                     MedicalAttachment, MedicalRecord, Medication, NursingNote,
                     Patient, Prescription, PrescriptionItem, RadiologyOrder,
-                    VitalSign)
+                    VitalSign, WomensHealthApproval, WomensHealthTimelineEvent)
 from services.auth_service import log_auth_event
 
 
@@ -128,7 +129,7 @@ def add_diagnosis(visit, *, actor, description, diagnosis_type="secondary", icd1
 
 def create_prescription(visit, *, actor, notes=None):
     require_emr_access(actor,visit.patient,write=True); doctor=_doctor_for(actor)
-    prescription=Prescription(prescription_number=_number("RX"),patient_id=visit.patient_id,doctor_id=doctor.id,medical_record=visit,prescribed_at=_now(),notes=notes)
+    prescription=Prescription(prescription_number=_number("RX"),patient_id=visit.patient_id,doctor_id=doctor.id,medical_record=visit,prescribed_at=_now(),status="created",notes=notes)
     db.session.add(prescription); db.session.flush(); _audit("emr.prescription_created",actor,visit.patient,prescription.id); return prescription
 
 
@@ -138,7 +139,9 @@ def add_prescription_item(prescription, *, actor, generic_name, dose, frequency,
     if not medication:
         medication=Medication(generic_name=generic_name.strip(),brand_name=(brand_name or "").strip() or None,strength=(strength or "").strip() or None,route=(route or "").strip() or None)
         db.session.add(medication); db.session.flush()
-    item=PrescriptionItem(prescription=prescription,medication=medication,dose=dose.strip(),route=(route or "").strip() or None,frequency=frequency.strip(),duration=(duration or "").strip() or None,quantity=(quantity or "").strip() or None,instructions=(instructions or "").strip() or None)
+    requested_quantity=Decimal(str(quantity or 1))
+    if requested_quantity <= 0: raise ValueError("Prescription quantity must be greater than zero.")
+    item=PrescriptionItem(prescription=prescription,medication=medication,dose=dose.strip(),route=(route or "").strip() or None,frequency=frequency.strip(),duration=(duration or "").strip() or None,quantity=str(requested_quantity),requested_quantity=requested_quantity,dispensed_quantity=0,instructions=(instructions or "").strip() or None)
     db.session.add(item); db.session.flush(); _audit("emr.prescription_item_added",actor,prescription.patient,item.id); db.session.commit(); return item
 
 
@@ -199,7 +202,7 @@ def attachment_path(attachment):
     return path
 
 
-def build_patient_timeline(patient):
+def build_patient_timeline(patient, signed_womens_health_only=False):
     events=[]
     def add(at,kind,title,obj,url=None):
         if at: events.append({"at":at,"kind":kind,"title":title,"object":obj,"url":url})
@@ -208,7 +211,22 @@ def build_patient_timeline(patient):
         if v.follow_up_date: add(datetime.combine(v.follow_up_date,datetime.min.time(),tzinfo=timezone.utc),"follow_up","Scheduled follow-up",v)
         for d in v.diagnoses: add(d.diagnosed_at,"diagnosis",d.description,d)
     for p in patient.prescriptions: add(p.prescribed_at,"prescription",f"Prescription {p.prescription_number}",p)
-    for o in patient.lab_orders: add(o.ordered_at,"lab",f"Lab: {o.test_name}",o)
+    for o in patient.lab_orders:
+        add(o.ordered_at,"lab",f"Lab ordered: {o.test_name}",o)
+        for result in o.results:
+            if result.status == "reviewed": add(result.reviewed_at or result.resulted_at,"lab_result",f"Lab result: {result.component_name}",result)
     for o in patient.radiology_orders: add(o.ordered_at,"radiology",f"{o.modality}: {o.body_part}",o)
     for a in patient.attachments: add(a.created_at,"attachment",a.original_name,a)
+    if patient.womens_health_profile:
+        wh_events = db.session.scalars(db.select(WomensHealthTimelineEvent).where(
+            WomensHealthTimelineEvent.profile_id == patient.womens_health_profile.id,
+            WomensHealthTimelineEvent.deleted_at.is_(None),
+        )).all()
+        if signed_womens_health_only:
+            signed = {(x.source_type, x.source_id) for x in db.session.scalars(db.select(WomensHealthApproval).where(
+                WomensHealthApproval.profile_id == patient.womens_health_profile.id,
+                WomensHealthApproval.status == "signed",
+            )).all()}
+            wh_events = [event for event in wh_events if (event.source_type, event.source_id) in signed]
+        for event in wh_events: add(event.event_at,"womens_health",event.title,event)
     return sorted(events,key=lambda event:event["at"],reverse=True)

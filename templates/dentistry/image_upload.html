@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+{% block title %}Dental Image Upload{% endblock %}
+{% block content %}
+<div class="card shadow-sm">
+  <div class="card-body">
+    <h1 class="h3">Upload dental image</h1>
+    <form method="post" enctype="multipart/form-data">
+      <div class="mb-3">
+        <label class="form-label">Image file</label>
+        <input class="form-control" type="file" name="image" required />
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Image type</label>
+        <select class="form-select" name="image_type">
+          <option value="intraoral">Intraoral</option>
+          <option value="xray">X-ray</option>
+        </select>
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Tooth number</label>
+        <input class="form-control" name="tooth_number" />
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Description</label>
+        <textarea class="form-control" name="description"></textarea>
+      </div>
+      <button class="btn btn-primary" type="submit">Upload image</button>
+    </form>
+  </div>
+</div>
+{% endblock %}

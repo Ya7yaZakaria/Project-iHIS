@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+{% block title %}Dental Procedure{% endblock %}
+{% block content %}
+<div class="card shadow-sm">
+  <div class="card-body">
+    <h1 class="h3">Create dental procedure</h1>
+    <form method="post">
+      <div class="mb-3">
+        <label class="form-label">Procedure name</label>
+        <input class="form-control" name="procedure_name" required />
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Tooth number</label>
+        <input class="form-control" name="tooth_number" value="21" />
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Diagnosis</label>
+        <textarea class="form-control" name="diagnosis"></textarea>
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Treatment details</label>
+        <textarea class="form-control" name="treatment_details"></textarea>
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Materials used</label>
+        <input class="form-control" name="materials_used" />
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Dentist notes</label>
+        <textarea class="form-control" name="dentist_notes"></textarea>
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Follow-up date</label>
+        <input class="form-control" name="follow_up_date" type="date" />
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Cost placeholder</label>
+        <input class="form-control" name="cost_placeholder" type="number" step="0.01" />
+      </div>
+      <button class="btn btn-primary" type="submit">Save procedure</button>
+    </form>
+  </div>
+</div>
+{% endblock %}

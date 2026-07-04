@@ -7,13 +7,15 @@ from auth.decorators import role_required
 from emr.forms import (DiagnosisForm, NursingNoteForm, OrderForm,
                        PrescriptionForm, VisitForm, VitalSignForm)
 from extensions import db
-from models import MedicalRecord, Patient, Prescription
+from models import LabTest, MedicalRecord, Patient, Prescription
 from services.emr_service import (add_diagnosis, add_nursing_note,
                                   add_prescription_item, add_vital_sign,
-                                  create_lab_order, create_prescription,
+                                  create_prescription,
                                   create_radiology_order, create_visit,
                                   require_emr_access, update_visit)
+from services.laboratory_service import create_lab_order as create_catalog_lab_order
 from services.auth_service import log_auth_event
+from services.pharmacy_service import PharmacyError, send_prescription_to_pharmacy
 
 emr_bp=Blueprint("emr",__name__)
 def _visit(visit_id): return db.get_or_404(MedicalRecord,visit_id)
@@ -70,15 +72,29 @@ def prescriptions(visit_id):
         except PermissionError as exc: db.session.rollback(); flash(str(exc),"danger")
     return render_template("prescriptions/create.html",form=form,visit=visit)
 
+@emr_bp.post("/prescriptions/<prescription_id>/send-to-pharmacy")
+@role_required("Doctor", "Womenâ€™s Health Doctor")
+def send_prescription(prescription_id):
+    prescription=db.get_or_404(Prescription,prescription_id)
+    try:
+        send_prescription_to_pharmacy(prescription,actor=current_user)
+        flash("Prescription sent to pharmacy.","success")
+    except PermissionError: abort(403)
+    except PharmacyError as exc: flash(str(exc),"danger")
+    return redirect(url_for("emr.visit_detail",visit_id=prescription.medical_record_id))
+
 @emr_bp.route("/visits/<visit_id>/orders",methods=["GET","POST"])
 @role_required("Doctor","Women’s Health Doctor")
 def orders(visit_id):
     visit=_visit(visit_id); form=OrderForm()
+    catalog=db.session.scalars(db.select(LabTest).where(LabTest.is_active.is_(True),LabTest.deleted_at.is_(None)).order_by(LabTest.category,LabTest.name)).all()
+    form.lab_test_id.choices=[("","Use free-text test")]+[(item.id,f"{item.code} — {item.name}") for item in catalog]
     if form.validate_on_submit():
         try:
             if form.order_type.data=="lab":
-                if not form.test_name.data: raise ValueError("Lab test name is required.")
-                create_lab_order(visit,actor=current_user,test_name=form.test_name.data,test_code=form.test_code.data,priority=form.priority.data,specimen_type=form.specimen_type.data,clinical_notes=form.clinical_notes.data)
+                selected=db.session.get(LabTest,form.lab_test_id.data) if form.lab_test_id.data else None
+                if not selected and not form.test_name.data: raise ValueError("Select a catalog test or enter a lab test name.")
+                create_catalog_lab_order(visit,actor=current_user,lab_test=selected,test_name=form.test_name.data,test_code=form.test_code.data,priority=form.priority.data,specimen_type=form.specimen_type.data,clinical_notes=form.clinical_notes.data)
             else:
                 if not form.modality.data or not form.body_part.data: raise ValueError("Modality and body part are required.")
                 create_radiology_order(visit,actor=current_user,modality=form.modality.data,body_part=form.body_part.data,priority=form.priority.data,clinical_indication=form.clinical_notes.data)

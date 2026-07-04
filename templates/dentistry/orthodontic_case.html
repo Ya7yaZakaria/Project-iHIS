@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+{% block title %}Orthodontic Case{% endblock %}
+{% block content %}
+<div class="card shadow-sm">
+  <div class="card-body">
+    <h1 class="h3">Create orthodontic case</h1>
+    <form method="post">
+      <div class="mb-3">
+        <label class="form-label">Diagnosis</label>
+        <textarea class="form-control" name="diagnosis"></textarea>
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Malocclusion class</label>
+        <input class="form-control" name="malocclusion_class" />
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Appliance type</label>
+        <input class="form-control" name="appliance_type" />
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Treatment plan</label>
+        <textarea class="form-control" name="treatment_plan"></textarea>
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Progress notes</label>
+        <textarea class="form-control" name="progress_notes"></textarea>
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Start date</label>
+        <input class="form-control" name="start_date" type="date" />
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Expected end date</label>
+        <input class="form-control" name="expected_end_date" type="date" />
+      </div>
+      <button class="btn btn-primary" type="submit">Save case</button>
+    </form>
+  </div>
+</div>
+{% endblock %}

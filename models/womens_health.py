@@ -14,6 +14,14 @@ class WomensHealthProfile(BaseModel):
     contraception = db.Column(db.String(120))
     gynecologic_history = db.Column(db.JSON)
     family_history = db.Column(db.JSON)
+    ob_gyn_summary = db.Column(db.Text)
+    menstrual_history = db.Column(db.JSON)
+    contraception_history = db.Column(db.JSON)
+    infertility_history = db.Column(db.JSON)
+    surgical_history = db.Column(db.JSON)
+    risk_flags = db.Column(db.JSON)
+    active_journey_type = db.Column(db.String(40), index=True)
+    active_journey_id = db.Column(db.String(36), index=True)
     patient = db.relationship("Patient", back_populates="womens_health_profile")
     pregnancies = db.relationship("Pregnancy", back_populates="profile")
     gynecology_journeys = db.relationship("GynecologyJourney", back_populates="profile")
@@ -27,18 +35,26 @@ class Pregnancy(BaseModel):
     gravida = db.Column(db.Integer)
     para = db.Column(db.Integer)
     gtpal = db.Column(db.String(20))
+    abortions = db.Column(db.Integer, nullable=False, default=0)
+    living_children = db.Column(db.Integer, nullable=False, default=0)
+    previous_cs_count = db.Column(db.Integer, nullable=False, default=0)
+    previous_vaginal_births = db.Column(db.Integer, nullable=False, default=0)
     lmp = db.Column(db.Date, index=True)
     estimated_due_date = db.Column(db.Date, index=True)
     risk_category = db.Column(db.String(30), nullable=False, default="low", index=True)
     status = db.Column(db.String(30), nullable=False, default="ongoing", index=True)
     maternal_conditions = db.Column(db.JSON)
     fetal_conditions = db.Column(db.JSON)
+    high_risk_flags = db.Column(db.JSON)
     delivery_plan = db.Column(db.Text)
     outcome = db.Column(db.String(120))
     profile = db.relationship("WomensHealthProfile", back_populates="pregnancies")
     visits = db.relationship("PregnancyVisit", back_populates="pregnancy")
     antenatal_visits = db.relationship("AntenatalVisit", back_populates="pregnancy")
     ultrasound_reports = db.relationship("WomensUltrasoundReport", back_populates="pregnancy")
+    delivery_record = db.relationship("DeliveryRecord", back_populates="pregnancy", uselist=False)
+    postpartum_visits = db.relationship("PostpartumVisit", back_populates="pregnancy")
+    risk_flags = db.relationship("PregnancyRiskFlag", back_populates="pregnancy")
 
 
 class PregnancyVisit(BaseModel):
@@ -50,10 +66,12 @@ class PregnancyVisit(BaseModel):
     visit_type = db.Column(db.String(60), nullable=False, default="obstetric")
     gestational_age_weeks = db.Column(db.Integer)
     gestational_age_days = db.Column(db.Integer)
+    complaint = db.Column(db.Text)
     assessment = db.Column(db.Text)
     plan = db.Column(db.Text)
     next_follow_up = db.Column(db.Date)
     pregnancy = db.relationship("Pregnancy", back_populates="visits")
+    antenatal_record = db.relationship("AntenatalVisit", back_populates="pregnancy_visit", uselist=False)
 
 
 class AntenatalVisit(BaseModel):
@@ -69,7 +87,10 @@ class AntenatalVisit(BaseModel):
     fetal_movement = db.Column(db.String(80))
     presentation = db.Column(db.String(60))
     urine_findings = db.Column(db.JSON)
+    recorded_by_id = db.Column(db.String(36), db.ForeignKey("users.id"), index=True)
     pregnancy = db.relationship("Pregnancy", back_populates="antenatal_visits")
+    pregnancy_visit = db.relationship("PregnancyVisit", back_populates="antenatal_record")
+    recorded_by = db.relationship("User")
 
 
 class ObstetricHistory(BaseModel):
@@ -96,6 +117,7 @@ class DeliveryRecord(BaseModel):
     maternal_complications = db.Column(db.JSON)
     newborns = db.Column(db.JSON)
     outcome = db.Column(db.String(80), nullable=False)
+    pregnancy = db.relationship("Pregnancy", back_populates="delivery_record")
 
 
 class PostpartumVisit(BaseModel):
@@ -109,6 +131,8 @@ class PostpartumVisit(BaseModel):
     contraception_plan = db.Column(db.String(160))
     mood_screen = db.Column(db.JSON)
     follow_up_plan = db.Column(db.Text)
+    follow_up_date = db.Column(db.Date, index=True)
+    pregnancy = db.relationship("Pregnancy", back_populates="postpartum_visits")
 
 
 class GynecologyJourney(BaseModel):
@@ -135,6 +159,9 @@ class GynecologyVisit(BaseModel):
     examination = db.Column(db.Text)
     assessment = db.Column(db.Text)
     plan = db.Column(db.Text)
+    diagnosis = db.Column(db.Text)
+    procedures = db.Column(db.JSON)
+    follow_up_date = db.Column(db.Date, index=True)
     journey = db.relationship("GynecologyJourney", back_populates="visits")
 
 
@@ -151,6 +178,8 @@ class InfertilityJourney(BaseModel):
     started_at = db.Column(db.DateTime(timezone=True), nullable=False, index=True)
     status = db.Column(db.String(30), nullable=False, default="active", index=True)
     outcome = db.Column(db.String(120))
+    investigations = db.Column(db.JSON)
+    treatment_plan = db.Column(db.Text)
     profile = db.relationship("WomensHealthProfile", back_populates="infertility_journeys")
     cycles = db.relationship("InfertilityCycle", back_populates="journey")
     partner_records = db.relationship("PartnerRecord", back_populates="journey")
@@ -168,7 +197,10 @@ class InfertilityCycle(BaseModel):
     trigger_at = db.Column(db.DateTime(timezone=True))
     outcome = db.Column(db.String(80))
     cancellation_reason = db.Column(db.Text)
+    timed_intercourse_advice = db.Column(db.Text)
     journey = db.relationship("InfertilityJourney", back_populates="cycles")
+    folliculometry_records = db.relationship("FolliculometryRecord", back_populates="cycle")
+    iui_cycle = db.relationship("IUICycle", back_populates="cycle", uselist=False)
 
 
 class PartnerRecord(BaseModel):
@@ -210,6 +242,7 @@ class FolliculometryRecord(BaseModel):
     endometrium_pattern = db.Column(db.String(80))
     notes = db.Column(db.Text)
     measurements = db.relationship("FollicleMeasurement", back_populates="record")
+    cycle = db.relationship("InfertilityCycle", back_populates="folliculometry_records")
 
 
 class FollicleMeasurement(BaseModel):
@@ -243,6 +276,10 @@ class IUICycle(BaseModel):
     luteal_support = db.Column(db.JSON)
     pregnancy_test_date = db.Column(db.Date)
     outcome = db.Column(db.String(80))
+    stimulation_protocol = db.Column(db.JSON)
+    semen_preparation_summary = db.Column(db.Text)
+    trigger_at = db.Column(db.DateTime(timezone=True))
+    cycle = db.relationship("InfertilityCycle", back_populates="iui_cycle")
 
 
 class FertilityMedicationProtocol(BaseModel):
@@ -265,6 +302,9 @@ class WomensUltrasoundReport(BaseModel):
     gynecology_journey_id = db.Column(db.String(36), db.ForeignKey("gynecology_journeys.id"), index=True)
     infertility_journey_id = db.Column(db.String(36), db.ForeignKey("infertility_journeys.id"), index=True)
     medical_record_id = db.Column(db.String(36), db.ForeignKey("medical_records.id"), index=True)
+    pregnancy_visit_id = db.Column(db.String(36), db.ForeignKey("pregnancy_visits.id"), index=True)
+    antenatal_visit_id = db.Column(db.String(36), db.ForeignKey("antenatal_visits.id"), index=True)
+    gynecology_visit_id = db.Column(db.String(36), db.ForeignKey("gynecology_visits.id"), index=True)
     radiology_order_id = db.Column(db.String(36), db.ForeignKey("radiology_orders.id"), index=True)
     performed_by_id = db.Column(db.String(36), db.ForeignKey("doctors.id"), index=True)
     scan_type = db.Column(db.String(80), nullable=False, index=True)
@@ -272,11 +312,14 @@ class WomensUltrasoundReport(BaseModel):
     findings = db.Column(db.Text)
     impression = db.Column(db.Text)
     measurements = db.Column(db.JSON)
-    attachments = db.Column(db.JSON)
+    placenta = db.Column(db.String(160))
+    liquor = db.Column(db.String(160))
+    cervical_length_mm = db.Column(db.Numeric(6, 2))
     status = db.Column(db.String(30), nullable=False, default="draft", index=True)
     pregnancy = db.relationship("Pregnancy", back_populates="ultrasound_reports")
     fetal_biometry = db.relationship("FetalBiometry", back_populates="report")
     doppler_records = db.relationship("FetalDopplerRecord", back_populates="report")
+    file_attachments = db.relationship("WomensUltrasoundAttachment", back_populates="report", cascade="all, delete-orphan")
 
 
 class FetalBiometry(BaseModel):
@@ -330,6 +373,34 @@ class PregnancyRiskFlag(BaseModel):
     resolved_at = db.Column(db.DateTime(timezone=True))
     source = db.Column(db.String(80))
     notes = db.Column(db.Text)
+    pregnancy = db.relationship("Pregnancy", back_populates="risk_flags")
+
+
+class WomensUltrasoundAttachment(BaseModel):
+    __tablename__ = "womens_ultrasound_attachments"
+    ultrasound_report_id = db.Column(db.String(36), db.ForeignKey("womens_ultrasound_reports.id", ondelete="CASCADE"), nullable=False, index=True)
+    uploaded_by_id = db.Column(db.String(36), db.ForeignKey("users.id"), nullable=False, index=True)
+    original_name = db.Column(db.String(255), nullable=False)
+    stored_name = db.Column(db.String(255), nullable=False, unique=True)
+    mime_type = db.Column(db.String(120), nullable=False)
+    extension = db.Column(db.String(12), nullable=False)
+    size_bytes = db.Column(db.Integer, nullable=False)
+    checksum_sha256 = db.Column(db.String(64), nullable=False, index=True)
+    description = db.Column(db.Text)
+    report = db.relationship("WomensUltrasoundReport", back_populates="file_attachments")
+    uploaded_by = db.relationship("User")
+
+
+class WomensHealthApproval(BaseModel):
+    __tablename__ = "womens_health_approvals"
+    __table_args__ = (db.UniqueConstraint("source_type", "source_id", name="uq_womens_health_approval_source"),)
+    profile_id = db.Column(db.String(36), db.ForeignKey("womens_health_profiles.id"), nullable=False, index=True)
+    source_type = db.Column(db.String(80), nullable=False, index=True)
+    source_id = db.Column(db.String(36), nullable=False, index=True)
+    status = db.Column(db.String(20), nullable=False, default="draft", index=True)
+    signed_by_id = db.Column(db.String(36), db.ForeignKey("users.id"), index=True)
+    signed_at = db.Column(db.DateTime(timezone=True), index=True)
+    signed_by = db.relationship("User")
 
 
 class WomensHealthCalculation(BaseModel):

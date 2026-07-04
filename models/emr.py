@@ -55,6 +55,9 @@ class Medication(BaseModel):
     strength = db.Column(db.String(80))
     route = db.Column(db.String(60))
     code = db.Column(db.String(80), unique=True, index=True)
+    category = db.Column(db.String(100), index=True)
+    manufacturer = db.Column(db.String(160))
+    barcode = db.Column(db.String(120), unique=True, index=True)
 
 
 class Prescription(BaseModel):
@@ -64,12 +67,24 @@ class Prescription(BaseModel):
     doctor_id = db.Column(db.String(36), db.ForeignKey("doctors.id"), nullable=False, index=True)
     medical_record_id = db.Column(db.String(36), db.ForeignKey("medical_records.id"), index=True)
     prescribed_at = db.Column(db.DateTime(timezone=True), nullable=False, index=True)
-    status = db.Column(db.String(30), nullable=False, default="active", index=True)
+    status = db.Column(db.String(30), nullable=False, default="created", index=True)
     notes = db.Column(db.Text)
+    pharmacy_notes = db.Column(db.Text)
+    sent_at = db.Column(db.DateTime(timezone=True), index=True)
+    reviewed_at = db.Column(db.DateTime(timezone=True), index=True)
+    reviewed_by_id = db.Column(db.String(36), db.ForeignKey("users.id"), index=True)
+    completed_at = db.Column(db.DateTime(timezone=True), index=True)
+    completed_by_id = db.Column(db.String(36), db.ForeignKey("users.id"), index=True)
+    cancelled_at = db.Column(db.DateTime(timezone=True), index=True)
+    cancelled_by_id = db.Column(db.String(36), db.ForeignKey("users.id"), index=True)
+    cancellation_reason = db.Column(db.Text)
     patient = db.relationship("Patient", back_populates="prescriptions")
     doctor = db.relationship("Doctor")
     medical_record = db.relationship("MedicalRecord", back_populates="prescriptions")
     items = db.relationship("PrescriptionItem", back_populates="prescription", cascade="all, delete-orphan")
+    reviewed_by = db.relationship("User", foreign_keys=[reviewed_by_id])
+    completed_by = db.relationship("User", foreign_keys=[completed_by_id])
+    cancelled_by = db.relationship("User", foreign_keys=[cancelled_by_id])
 
 
 class PrescriptionItem(BaseModel):
@@ -81,9 +96,15 @@ class PrescriptionItem(BaseModel):
     frequency = db.Column(db.String(120), nullable=False)
     duration = db.Column(db.String(120))
     quantity = db.Column(db.String(80))
+    requested_quantity = db.Column(db.Numeric(12, 2), nullable=False, default=1)
+    dispensed_quantity = db.Column(db.Numeric(12, 2), nullable=False, default=0)
+    substitute_medication_id = db.Column(db.String(36), db.ForeignKey("medications.id"), index=True)
+    substitution_note = db.Column(db.Text)
     instructions = db.Column(db.Text)
     prescription = db.relationship("Prescription", back_populates="items")
-    medication = db.relationship("Medication")
+    medication = db.relationship("Medication", foreign_keys=[medication_id])
+    substitute_medication = db.relationship("Medication", foreign_keys=[substitute_medication_id])
+    dispensing_records = db.relationship("DispensingRecord", back_populates="prescription_item")
 
 
 class MedicalAttachment(BaseModel):

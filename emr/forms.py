@@ -4,7 +4,7 @@ from flask_wtf import FlaskForm
 from flask_wtf.file import FileField, FileRequired
 from wtforms import (DateField, DateTimeLocalField, DecimalField, IntegerField,
                      SelectField, StringField, SubmitField, TextAreaField)
-from wtforms.validators import DataRequired, Length, Optional
+from wtforms.validators import DataRequired, Length, NumberRange, Optional
 
 
 class PatientForm(FlaskForm):
@@ -58,13 +58,14 @@ class PrescriptionForm(FlaskForm):
     route=StringField("Route",validators=[Optional(),Length(max=60)])
     frequency=StringField("Frequency",validators=[DataRequired(),Length(max=120)])
     duration=StringField("Duration",validators=[Optional(),Length(max=120)])
-    quantity=StringField("Quantity",validators=[Optional(),Length(max=80)])
+    quantity=DecimalField("Quantity",places=2,validators=[DataRequired(),NumberRange(min=0.01)])
     instructions=TextAreaField("Instructions",validators=[Optional()])
     submit=SubmitField("Create prescription")
 
 
 class OrderForm(FlaskForm):
     order_type=SelectField("Order type",choices=[("lab","Laboratory"),("radiology","Radiology")])
+    lab_test_id=SelectField("Catalog test",choices=[],validators=[Optional()])
     test_name=StringField("Lab test name",validators=[Optional(),Length(max=160)])
     test_code=StringField("Lab test code",validators=[Optional(),Length(max=60)])
     specimen_type=StringField("Specimen",validators=[Optional(),Length(max=80)])

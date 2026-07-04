@@ -75,7 +75,7 @@ def emr_dashboard(patient_id):
     try: require_emr_access(current_user,patient)
     except PermissionError: abort(403)
     log_auth_event("emr.viewed",actor=current_user,details={"patient_id":patient.id}); db.session.commit()
-    timeline=build_patient_timeline(patient)
+    timeline=build_patient_timeline(patient,signed_womens_health_only=current_user.has_role("Patient"))
     return render_template("emr/dashboard.html",patient=patient,timeline=timeline)
 
 
@@ -86,7 +86,7 @@ def timeline(patient_id):
     try: require_emr_access(current_user,patient)
     except PermissionError: abort(403)
     log_auth_event("emr.timeline_viewed",actor=current_user,details={"patient_id":patient.id}); db.session.commit()
-    return render_template("emr/dashboard.html",patient=patient,timeline=build_patient_timeline(patient))
+    return render_template("emr/dashboard.html",patient=patient,timeline=build_patient_timeline(patient,signed_womens_health_only=current_user.has_role("Patient")))
 
 
 @patient_bp.route("/<patient_id>/attachments",methods=["GET","POST"])

@@ -1,0 +1,85 @@
+{% extends 'base.html' %}
+{% block title %}Dental Chart{% endblock %}
+{% block content %}
+<div class="row g-4">
+  <div class="col-12">
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <h1 class="h3">Dental chart</h1>
+        <p class="text-muted mb-0">Tooth-level charting and treatment timeline.</p>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-5">
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <h2 class="h5">Update chart</h2>
+        <form method="post">
+          <div class="mb-3">
+            <label class="form-label">Tooth number</label>
+            <input class="form-control" name="tooth_number" value="18" />
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Condition</label>
+            <input class="form-control" name="condition" value="Healthy" />
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Caries</label>
+            <input class="form-control" name="caries" />
+          </div>
+          <div class="mb-3 form-check">
+            <input class="form-check-input" type="checkbox" name="missing_teeth" />
+            <label class="form-check-label">Missing tooth</label>
+          </div>
+          <div class="mb-3 form-check">
+            <input class="form-check-input" type="checkbox" name="filled_teeth" />
+            <label class="form-check-label">Filled tooth</label>
+          </div>
+          <div class="mb-3 form-check">
+            <input class="form-check-input" type="checkbox" name="crown_bridge" />
+            <label class="form-check-label">Crown/bridge</label>
+          </div>
+          <div class="mb-3 form-check">
+            <input class="form-check-input" type="checkbox" name="implant" />
+            <label class="form-check-label">Implant</label>
+          </div>
+          <div class="mb-3 form-check">
+            <input class="form-check-input" type="checkbox" name="root_canal" />
+            <label class="form-check-label">Root canal</label>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Mobility</label>
+            <input class="form-control" name="mobility" />
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Periodontal notes</label>
+            <textarea class="form-control" name="periodontal_notes"></textarea>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Notes</label>
+            <textarea class="form-control" name="notes"></textarea>
+          </div>
+          <button class="btn btn-primary" type="submit">Save chart</button>
+        </form>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-7">
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <h2 class="h5">Timeline</h2>
+        <ul class="list-group list-group-flush">
+          {% for event in timeline %}
+          <li class="list-group-item">{{ event.label }}</li>
+          {% endfor %}
+        </ul>
+        <div class="mt-3 d-flex gap-2">
+          <a class="btn btn-outline-secondary" href="{{ url_for('dentistry.procedure_create', record_id=record.id) }}">Add procedure</a>
+          <a class="btn btn-outline-secondary" href="{{ url_for('dentistry.orthodontic_case_create', record_id=record.id) }}">Create orthodontic case</a>
+          <a class="btn btn-outline-secondary" href="{{ url_for('dentistry.image_upload', record_id=record.id) }}">Upload image</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

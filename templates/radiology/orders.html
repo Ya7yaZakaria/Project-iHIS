@@ -1,0 +1,60 @@
+{% extends 'base.html' %}
+{% block title %}Radiology Orders | iHIS{% endblock %}
+{% block content %}
+<h1 class="h2">Radiology orders</h1>
+
+<form method="get" class="card card-body border-0 shadow-sm my-4">
+  <div class="row g-2">
+    <div class="col-md-6">
+      <input class="form-control" name="search" value="{{ search }}" placeholder="Order, patient, MRN, modality, or body part">
+    </div>
+    <div class="col-md-2">
+      <select class="form-select" name="modality">
+        <option value="">All modalities</option>
+        {% for value in ['X-ray','Ultrasound','CT','MRI','Mammography','Doppler','Other'] %}
+        <option value="{{ value }}" {{ 'selected' if modality == value }}>{{ value }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-md-2">
+      <select class="form-select" name="status">
+        <option value="">All statuses</option>
+        {% for value in ['requested','scheduled','patient_arrived','imaging_performed','report_drafted','report_verified','reviewed_by_doctor','cancelled'] %}
+        <option value="{{ value }}" {{ 'selected' if status == value }}>{{ value.replace('_',' ')|title }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-md-2">
+      <button class="btn btn-primary w-100">Filter</button>
+    </div>
+  </div>
+</form>
+
+<div class="card border-0 shadow-sm">
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+      <thead>
+        <tr><th>Order</th><th>Patient</th><th>Study</th><th>Priority</th><th>Status</th><th></th></tr>
+      </thead>
+      <tbody>
+        {% for order in orders %}
+        <tr>
+          <td>{{ order.order_number }}<div class="small text-body-secondary">{{ order.ordered_at.strftime('%Y-%m-%d %H:%M') }}</div></td>
+          <td>{{ order.patient.first_name }} {{ order.patient.last_name }}<div class="small">{{ order.patient.medical_record_number }}</div></td>
+          <td>{{ order.modality }}<div class="small text-body-secondary">{{ order.body_part }}</div></td>
+          <td>{{ order.priority|upper }}</td>
+          <td>
+            <span class="badge text-bg-{{ 'success' if order.status in ('report_verified','reviewed_by_doctor') else 'danger' if order.status == 'cancelled' else 'primary' }}">
+              {{ order.status.replace('_',' ')|title }}
+            </span>
+          </td>
+          <td><a class="btn btn-sm btn-outline-primary" href="{{ url_for('radiology.order_detail', order_id=order.id) }}">Open</a></td>
+        </tr>
+        {% else %}
+        <tr><td colspan="6" class="text-center py-5">No radiology orders found.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

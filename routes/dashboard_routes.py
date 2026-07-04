@@ -1,6 +1,6 @@
 """Role-protected dashboard placeholders for Phase 3."""
 
-from flask import Blueprint, render_template
+from flask import Blueprint, redirect, render_template, url_for
 
 from auth.decorators import role_required
 
@@ -25,11 +25,11 @@ def doctor(): return _dashboard("Doctor", "Clinical worklist and electronic medi
 
 @dashboard_bp.get("/womens-health")
 @role_required("Women’s Health Doctor")
-def womens_health(): return _dashboard("Women’s Health", "Integrated obstetric, gynecology, and fertility care")
+def womens_health(): return redirect(url_for("womens_health.dashboard"))
 
 @dashboard_bp.get("/reception")
 @role_required("Receptionist")
-def reception(): return _dashboard("Reception", "Registration and appointment coordination")
+def reception(): return redirect(url_for("reception.dashboard"))
 
 @dashboard_bp.get("/nursing")
 @role_required("Nurse")
@@ -37,7 +37,7 @@ def nursing(): return _dashboard("Nursing", "Patient monitoring, vital signs, an
 
 @dashboard_bp.get("/laboratory")
 @role_required("Laboratory")
-def laboratory(): return _dashboard("Laboratory", "Orders, samples, results, and validation")
+def laboratory(): return redirect(url_for("laboratory.dashboard"))
 
 @dashboard_bp.get("/radiology")
 @role_required("Radiology")
@@ -45,7 +45,7 @@ def radiology(): return _dashboard("Radiology", "Imaging worklist and reporting"
 
 @dashboard_bp.get("/pharmacy")
 @role_required("Pharmacist")
-def pharmacy(): return _dashboard("Pharmacy", "Prescription verification and inventory")
+def pharmacy(): return redirect(url_for("pharmacy.dashboard"))
 
 @dashboard_bp.get("/dentistry")
 @role_required("Dentist")

@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+{% block title %}Radiology | iHIS{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between mb-4">
+  <div>
+    <h1 class="h2">Radiology</h1>
+    <p class="text-body-secondary">Imaging workflow overview.</p>
+  </div>
+  <div class="d-flex gap-2">
+    <a class="btn btn-outline-primary" href="{{ url_for('radiology.catalog') }}">Imaging catalog</a>
+    <a class="btn btn-primary" href="{{ url_for('radiology.orders') }}">Open worklist</a>
+  </div>
+</div>
+
+<div class="row g-3 mb-4">
+  {% for label,value in [
+    ('Pending orders', pending|length),
+    ('Scheduled today', scheduled_today),
+    ('Performed today', performed_today),
+    ('Awaiting verification', awaiting_verification|length),
+    ('Urgent findings', urgent_findings),
+    ('Completed today', completed_today)
+  ] %}
+  <div class="col-6 col-lg-4 col-xl-2">
+    <div class="card card-body border-0 shadow-sm h-100">
+      <span class="small text-body-secondary">{{ label }}</span>
+      <strong class="fs-3">{{ value }}</strong>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+<div class="card border-0 shadow-sm">
+  <div class="card-header bg-transparent fw-semibold">Today's scheduled studies</div>
+  <div class="table-responsive">
+    <table class="table align-middle mb-0">
+      <thead>
+        <tr><th>Time</th><th>Patient</th><th>Study</th><th>Status</th><th></th></tr>
+      </thead>
+      <tbody>
+        {% for order in today_schedule %}
+        <tr>
+          <td>{{ order.scheduled_at.strftime('%H:%M') if order.scheduled_at else '—' }}</td>
+          <td>{{ order.patient.first_name }} {{ order.patient.last_name }}</td>
+          <td>{{ order.modality }} · {{ order.body_part }}</td>
+          <td><span class="badge text-bg-primary">{{ order.status.replace('_',' ')|title }}</span></td>
+          <td><a class="btn btn-sm btn-outline-primary" href="{{ url_for('radiology.order_detail', order_id=order.id) }}">Open</a></td>
+        </tr>
+        {% else %}
+        <tr><td colspan="5" class="text-center py-5 text-body-secondary">No studies scheduled today.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

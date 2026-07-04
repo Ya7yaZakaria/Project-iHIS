@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+{% block title %}Imaging Catalog | iHIS{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between mb-4">
+  <div>
+    <h1 class="h2">Imaging catalog</h1>
+    <p class="text-body-secondary">Standard imaging studies, modalities, body regions, and preparation instructions.</p>
+  </div>
+  {% if current_user.has_role('Super Admin','Admin') %}
+  <a class="btn btn-primary align-self-start" href="{{ url_for('radiology.catalog_create') }}">Create study</a>
+  {% endif %}
+</div>
+
+<div class="card border-0 shadow-sm">
+  <div class="table-responsive">
+    <table class="table align-middle mb-0">
+      <thead>
+        <tr><th>Study</th><th>Modality</th><th>Body region</th><th>Preparation</th><th>Status</th><th></th></tr>
+      </thead>
+      <tbody>
+        {% for study in studies %}
+        <tr>
+          <td>{{ study.name }}</td>
+          <td>{{ study.modality }}</td>
+          <td>{{ study.body_region }}</td>
+          <td>{{ study.preparation_instructions or '—' }}</td>
+          <td>{{ 'Active' if study.is_active else 'Inactive' }}</td>
+          <td>
+            {% if current_user.has_role('Super Admin','Admin') %}
+            <a href="{{ url_for('radiology.catalog_edit', study_id=study.id) }}">Edit</a>
+            {% endif %}
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="6" class="text-center py-5">No imaging studies.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

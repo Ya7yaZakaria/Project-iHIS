@@ -6,9 +6,15 @@ from .patient import Appointment, Patient
 from .doctor import Doctor, Specialty
 from .emr import (Diagnosis, MedicalAttachment, MedicalRecord, Medication,
                   NursingNote, Prescription, PrescriptionItem, VitalSign)
-from .laboratory import LabOrder, LabResult
-from .radiology import RadiologyOrder, RadiologyReport
-from .pharmacy import PharmacyInventory
+from .laboratory import LabOrder, LabResult, LabTest
+from .radiology import (
+    ImagingStudy,
+    RadiologyAttachment,
+    RadiologyOrder,
+    RadiologyReport,
+)
+from .pharmacy import (DispensingRecord, PatientMedicationHistory,
+                       PharmacyInventory, StockMovement)
 from .dentistry import (DentalChart, DentalImage, DentalProcedure, DentalRecord,
                         DentalSpecialty, Dentist, OrthodonticCase)
 from .rehabilitation import (CareTeam, ExerciseLibrary, FunctionalOutcome,
@@ -24,6 +30,7 @@ from .womens_health import (AntenatalVisit, DeliveryRecord, FetalBiometry,
                             PartnerRecord, PostpartumVisit, Pregnancy,
                             PregnancyRiskFlag, PregnancyVisit, SemenAnalysis,
                             WomensHealthCalculation, WomensHealthProfile,
-                            WomensHealthTimelineEvent, WomensUltrasoundReport)
+                            WomensHealthApproval, WomensHealthTimelineEvent,
+                            WomensUltrasoundAttachment, WomensUltrasoundReport)
 
 __all__ = [name for name in globals() if not name.startswith("_")]

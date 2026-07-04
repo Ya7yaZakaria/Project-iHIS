@@ -1,0 +1,60 @@
+{% extends 'base.html' %}
+{% block title %}Dentistry Dashboard{% endblock %}
+{% block content %}
+<div class="row g-4">
+  <div class="col-12">
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <h1 class="h3 mb-2">Dentistry Module</h1>
+        <p class="text-muted mb-0">Practical dental records, charts, procedures, orthodontic cases, and image uploads are integrated with the EMR.</p>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-6 col-xl-3">
+    <div class="card shadow-sm h-100">
+      <div class="card-body">
+        <h2 class="h6">Dentistry appointments today</h2>
+        <p class="display-6 mb-0">0</p>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-6 col-xl-3">
+    <div class="card shadow-sm h-100">
+      <div class="card-body">
+        <h2 class="h6">Active treatment plans</h2>
+        <p class="display-6 mb-0">{{ records|length }}</p>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-6 col-xl-3">
+    <div class="card shadow-sm h-100">
+      <div class="card-body">
+        <h2 class="h6">Recent procedures</h2>
+        <p class="display-6 mb-0">0</p>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-6 col-xl-3">
+    <div class="card shadow-sm h-100">
+      <div class="card-body">
+        <h2 class="h6">Orthodontic follow-ups</h2>
+        <p class="display-6 mb-0">0</p>
+      </div>
+    </div>
+  </div>
+  <div class="col-12">
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <h2 class="h5">Recent dental records</h2>
+        <ul class="list-group list-group-flush">
+          {% for record in records %}
+          <li class="list-group-item"><a href="{{ url_for('dentistry.dental_chart', record_id=record.id) }}">{{ record.patient.first_name }} {{ record.patient.last_name }} — {{ record.chief_complaint }}</a></li>
+          {% else %}
+          <li class="list-group-item text-muted">No dental records yet.</li>
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -25,7 +25,7 @@ PERMISSION_MODULES = {
     "rehabilitation": ("view", "create", "update"),
     "nursing": ("view", "record"),
     "reports": ("view", "generate"),
-    "womens_health": ("view", "create", "update", "sign"),
+    "womens_health": ("view", "create", "update", "sign", "record_anc_basic"),
     "users": ("view", "manage", "reset_password"),
     "roles": ("view", "manage_permissions"),
 }
@@ -35,7 +35,7 @@ ROLE_PERMISSION_MAP = {
     "Doctor": {"patients.view", "appointments.view", "emr.view", "emr.create", "emr.update", "emr.sign", "laboratory.order", "radiology.order"},
     "Women’s Health Doctor": {"patients.view", "appointments.view", "emr.view", "emr.create", "emr.update", "emr.sign", "laboratory.order", "radiology.order", "womens_health.view", "womens_health.create", "womens_health.update", "womens_health.sign"},
     "Receptionist": {"patients.view", "patients.create", "patients.update", "appointments.view", "appointments.create", "appointments.update", "appointments.cancel"},
-    "Nurse": {"patients.view", "emr.view", "nursing.view", "nursing.record"},
+    "Nurse": {"patients.view", "emr.view", "nursing.view", "nursing.record", "womens_health.record_anc_basic"},
     "Laboratory": {"patients.view", "laboratory.view", "laboratory.result", "laboratory.validate"},
     "Radiology": {"patients.view", "radiology.view", "radiology.report", "radiology.validate"},
     "Pharmacist": {"patients.view", "pharmacy.view", "pharmacy.dispense", "pharmacy.manage_inventory"},

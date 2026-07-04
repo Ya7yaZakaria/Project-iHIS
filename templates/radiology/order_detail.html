@@ -1,0 +1,106 @@
+{% extends 'base.html' %}
+{% block title %}{{ order.order_number }} | Radiology{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between mb-4">
+  <div>
+    <p class="text-primary fw-semibold mb-1">{{ order.order_number }}</p>
+    <h1 class="h2">{{ order.modality }} · {{ order.body_part }}</h1>
+    <p>{{ order.patient.first_name }} {{ order.patient.last_name }} · {{ order.patient.medical_record_number }}</p>
+  </div>
+  <span class="badge text-bg-primary align-self-start fs-6">{{ order.status.replace('_',' ')|title }}</span>
+</div>
+
+<div class="row g-4">
+  <div class="col-lg-8">
+    <div class="card border-0 shadow-sm mb-3">
+      <div class="card-body">
+        <h2 class="h5">Clinical indication</h2>
+        <p>{{ order.clinical_indication or '—' }}</p>
+        <hr>
+        <p><strong>Requested by:</strong> {{ order.doctor.user.full_name if order.doctor and order.doctor.user else '—' }}</p>
+        <p><strong>Priority:</strong> {{ order.priority|upper }}</p>
+        <p><strong>Scheduled:</strong> {{ order.scheduled_at.strftime('%Y-%m-%d %H:%M') if order.scheduled_at else '—' }}</p>
+      </div>
+    </div>
+
+    <div class="card border-0 shadow-sm">
+      <div class="card-body">
+        <h2 class="h5">Reports</h2>
+        {% for report in order.reports %}
+        <div class="border rounded p-3 mb-3 {{ 'border-danger' if report.is_critical }}">
+          <div class="d-flex justify-content-between">
+            <strong>{{ report.status.replace('_',' ')|title }}</strong>
+            <span class="badge text-bg-{{ 'danger' if report.is_critical else 'warning' if report.is_abnormal else 'success' }}">
+              {{ 'Critical' if report.is_critical else 'Abnormal' if report.is_abnormal else 'Normal' }}
+            </span>
+          </div>
+          <h3 class="h6 mt-3">Findings</h3>
+          <p>{{ report.findings or '—' }}</p>
+          <h3 class="h6">Impression</h3>
+          <p>{{ report.impression or '—' }}</p>
+          {% if report.recommendations %}<h3 class="h6">Recommendations</h3><p>{{ report.recommendations }}</p>{% endif %}
+
+          <div class="mt-2">
+            {% if (current_user.has_role('Super Admin','Admin','Radiology') or current_user.has_permission('radiology.verify')) and report.status == 'draft' %}
+            <form method="post" action="{{ url_for('radiology.verify', order_id=order.id) }}" class="d-inline">
+              {{ action_form.csrf_token }}
+              <input type="hidden" name="report_id" value="{{ report.id }}">
+              <button class="btn btn-sm btn-success">Verify</button>
+            </form>
+            {% endif %}
+            {% if current_user.has_role('Doctor') and report.status == 'verified' %}
+            <form method="post" action="{{ url_for('radiology.review', order_id=order.id) }}" class="d-inline">
+              {{ action_form.csrf_token }}
+              <input type="hidden" name="report_id" value="{{ report.id }}">
+              <button class="btn btn-sm btn-primary">Review</button>
+            </form>
+            {% endif %}
+          </div>
+        </div>
+        {% else %}
+        <p class="text-body-secondary">No report drafted yet.</p>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-4">
+    {% if current_user.has_role('Super Admin','Admin','Radiology') %}
+    <div class="card card-body border-0 shadow-sm mb-3">
+      <h2 class="h5">Workflow</h2>
+
+      {% if order.status == 'requested' %}
+      <form method="post" action="{{ url_for('radiology.schedule', order_id=order.id) }}">
+        {{ schedule_form.hidden_tag() }}
+        <div class="mb-2">{{ schedule_form.scheduled_at.label(class='form-label') }}{{ schedule_form.scheduled_at(class='form-control') }}</div>
+        <div class="mb-2">{{ schedule_form.assigned_radiology_user_id.label(class='form-label') }}{{ schedule_form.assigned_radiology_user_id(class='form-select') }}</div>
+        {{ schedule_form.submit(class='btn btn-primary w-100') }}
+      </form>
+      {% elif order.status == 'scheduled' %}
+      <form method="post" action="{{ url_for('radiology.arrived', order_id=order.id) }}">
+        {{ action_form.csrf_token }}
+        <button class="btn btn-primary w-100">Mark patient arrived</button>
+      </form>
+      {% elif order.status == 'patient_arrived' %}
+      <form method="post" action="{{ url_for('radiology.perform', order_id=order.id) }}">
+        {{ action_form.csrf_token }}
+        <button class="btn btn-primary w-100">Mark imaging performed</button>
+      </form>
+      {% endif %}
+
+      {% if order.status in ('imaging_performed','report_drafted') %}
+      <a class="btn btn-outline-primary mt-2 w-100" href="{{ url_for('radiology.report', order_id=order.id) }}">Draft / Edit report</a>
+      {% endif %}
+    </div>
+
+    {% if order.status in ('requested','scheduled','patient_arrived','imaging_performed','report_drafted') %}
+    <form method="post" action="{{ url_for('radiology.cancel', order_id=order.id) }}" class="card card-body border-0 shadow-sm">
+      {{ cancel_form.hidden_tag() }}
+      {{ cancel_form.reason(class='form-control mb-2', placeholder='Cancellation reason') }}
+      {{ cancel_form.submit(class='btn btn-outline-danger') }}
+    </form>
+    {% endif %}
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

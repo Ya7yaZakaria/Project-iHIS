@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+{% block title %}Dental Record{% endblock %}
+{% block content %}
+<div class="row g-4">
+  <div class="col-12">
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <h1 class="h3">{{ patient.first_name }} {{ patient.last_name }}</h1>
+        <p class="text-muted mb-0">Dental record entry and history.</p>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-5">
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <h2 class="h5">Create dental record</h2>
+        <form method="post">
+          <div class="mb-3">
+            <label class="form-label">Chief complaint</label>
+            <textarea class="form-control" name="chief_complaint"></textarea>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Dental history</label>
+            <textarea class="form-control" name="dental_history"></textarea>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Oral hygiene history</label>
+            <textarea class="form-control" name="oral_hygiene_history"></textarea>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Allergies</label>
+            <input class="form-control" name="allergies" placeholder="Penicillin" />
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Medical alerts</label>
+            <input class="form-control" name="medical_alerts" placeholder="High blood pressure" />
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Dental diagnosis</label>
+            <textarea class="form-control" name="dental_diagnosis"></textarea>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Treatment plan</label>
+            <textarea class="form-control" name="treatment_plan"></textarea>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Examination notes</label>
+            <textarea class="form-control" name="examination"></textarea>
+          </div>
+          <button class="btn btn-primary" type="submit">Save dental record</button>
+        </form>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-7">
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <h2 class="h5">Existing records</h2>
+        <ul class="list-group list-group-flush">
+          {% for record in records %}
+          <li class="list-group-item"><a href="{{ url_for('dentistry.dental_chart', record_id=record.id) }}">{{ record.visit_at.strftime('%Y-%m-%d') }} — {{ record.chief_complaint or 'No complaint recorded' }}</a></li>
+          {% else %}
+          <li class="list-group-item text-muted">No records yet.</li>
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

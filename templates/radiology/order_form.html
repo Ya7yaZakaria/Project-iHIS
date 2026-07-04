@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+
+{% block title %}New Radiology Order{% endblock %}
+
+{% block content %}
+
+<div class="row justify-content-center">
+
+    <div class="col-xl-8">
+
+        <div class="d-flex justify-content-between align-items-center mb-4">
+
+            <div>
+                <h2 class="mb-1">Create Radiology Order</h2>
+                <p class="text-muted mb-0">
+                    Request a new imaging study.
+                </p>
+            </div>
+
+            <a href="{{ url_for('radiology.orders') }}"
+               class="btn btn-outline-secondary">
+                Back
+            </a>
+
+        </div>
+
+        <form method="post"
+              class="card shadow-sm border-0">
+
+            <div class="card-body">
+
+                {{ form.hidden_tag() }}
+
+                <div class="row g-3">
+
+                    <div class="col-md-6">
+                        {{ form.patient_id.label(class="form-label") }}
+                        {{ form.patient_id(class="form-select") }}
+                    </div>
+
+                    <div class="col-md-6">
+                        {{ form.doctor_id.label(class="form-label") }}
+                        {{ form.doctor_id(class="form-select") }}
+                    </div>
+
+                    <div class="col-md-6">
+                        {{ form.imaging_study_id.label(class="form-label") }}
+                        {{ form.imaging_study_id(class="form-select") }}
+                    </div>
+
+                    <div class="col-md-6">
+                        {{ form.modality.label(class="form-label") }}
+                        {{ form.modality(class="form-select") }}
+                    </div>
+
+                    <div class="col-md-6">
+                        {{ form.body_part.label(class="form-label") }}
+                        {{ form.body_part(class="form-control") }}
+                    </div>
+
+                    <div class="col-md-6">
+                        {{ form.priority.label(class="form-label") }}
+                        {{ form.priority(class="form-select") }}
+                    </div>
+
+                    <div class="col-12">
+                        {{ form.clinical_indication.label(class="form-label") }}
+                        {{ form.clinical_indication(class="form-control", rows="4") }}
+                    </div>
+
+                </div>
+
+            </div>
+
+            <div class="card-footer bg-white d-flex justify-content-end gap-2">
+
+                <a href="{{ url_for('radiology.orders') }}"
+                   class="btn btn-outline-secondary">
+
+                    Cancel
+
+                </a>
+
+                {{ form.submit(class="btn btn-primary") }}
+
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+
+{% endblock %}
