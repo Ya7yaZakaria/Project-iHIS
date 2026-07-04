@@ -211,3 +211,210 @@ def test_nullable_visit_doctor_and_therapist_relationships(session):
     assert record.doctor is None
     assert therapy_session.therapist_user is None
     assert therapy_session in plan.sessions
+
+from services.rehabilitation_service import (
+    RehabilitationServiceError,
+    activate_therapy_plan,
+    add_therapy_session,
+    build_rehabilitation_progress,
+    calculate_pain_change,
+    complete_therapy_session,
+    create_exercise,
+    create_initial_assessment,
+    create_rehabilitation_record,
+    create_therapy_plan,
+    deactivate_therapy_plan,
+    generate_home_program_summary,
+    update_exercise,
+    update_rehabilitation_record,
+)
+
+
+def test_rehabilitation_service_create_and_update_record(session):
+    patient = _patient(session, "service-record")
+
+    record = create_rehabilitation_record(
+        patient_id=patient.id,
+        referral_source="Orthopedics",
+        chief_complaint="Back pain",
+        pain_score=7,
+        mobility_status="Limited",
+        rehabilitation_diagnosis="Mechanical low back pain",
+        therapy_goals="Reduce pain",
+    )
+
+    assert record.id
+    assert record.status == "active"
+
+    updated = update_rehabilitation_record(record, pain_score=4, mobility_status="Improved")
+    assert updated.pain_score == 4
+    assert updated.mobility_status == "Improved"
+
+
+def test_rehabilitation_service_rejects_invalid_pain_score(session):
+    patient = _patient(session, "service-invalid-pain")
+
+    try:
+        create_rehabilitation_record(
+            patient_id=patient.id,
+            chief_complaint="Should fail",
+            pain_score=11,
+        )
+    except RehabilitationServiceError as exc:
+        assert "pain_score" in str(exc)
+    else:
+        raise AssertionError("Expected RehabilitationServiceError")
+
+
+def test_rehabilitation_service_create_assessment(session):
+    patient = _patient(session, "service-assessment")
+    record = create_rehabilitation_record(patient_id=patient.id)
+
+    assessment = create_initial_assessment(
+        rehabilitation_record_id=record.id,
+        assessment_date=date.today(),
+        physical_exam="Tenderness",
+        functional_score=60,
+        assessment_summary="Initial rehab assessment",
+    )
+
+    assert assessment.id
+    assert assessment.rehabilitation_record_id == record.id
+
+
+def test_rehabilitation_service_therapy_plan_status_and_home_program(session):
+    record = _record(session, "service-plan")
+    therapist = _therapist(session, "service-plan")
+
+    plan = create_therapy_plan(
+        rehabilitation_record_id=record.id,
+        patient_id=record.patient_id,
+        therapist_id=therapist.id,
+        plan_name="Back rehab",
+        start_date=date.today(),
+        goals=["Pain control"],
+        frequency="3 times weekly",
+        duration="4 weeks",
+        exercise_program="Stretching",
+        home_program="Daily walking",
+        review_date=date.today(),
+    )
+
+    assert plan.id
+    assert plan.active is True
+    assert plan.status == "active"
+
+    deactivate_therapy_plan(plan)
+    assert plan.active is False
+    assert plan.status == "inactive"
+
+    activate_therapy_plan(plan)
+    assert plan.active is True
+    assert plan.status == "active"
+
+    summary = generate_home_program_summary(plan)
+    assert "Stretching" in summary
+    assert "Daily walking" in summary
+    assert "3 times weekly" in summary
+
+
+def test_rehabilitation_service_session_completion_and_pain_change(session):
+    record = _record(session, "service-session")
+    therapist = _therapist(session, "service-session")
+
+    plan = create_therapy_plan(
+        rehabilitation_record_id=record.id,
+        patient_id=record.patient_id,
+        therapist_id=therapist.id,
+        plan_name="Session plan",
+        start_date=date.today(),
+        goals=["Improve function"],
+    )
+
+    therapy_session = add_therapy_session(
+        therapy_plan_id=plan.id,
+        patient_id=record.patient_id,
+        therapist_id=therapist.id,
+        scheduled_start=datetime.now(timezone.utc),
+        pain_before=8,
+        pain_after=5,
+        modalities_used="Heat",
+    )
+
+    assert therapy_session.status == "scheduled"
+    assert calculate_pain_change(therapy_session) == 3
+
+    completed = complete_therapy_session(
+        therapy_session,
+        progress_notes="Improved tolerance",
+        patient_tolerance="Good",
+    )
+
+    assert completed.status == "completed"
+    assert completed.session_date is not None
+
+
+def test_rehabilitation_service_exercise_create_update(session):
+    exercise = create_exercise(
+        exercise_name="Wall squat",
+        category="Strength",
+        target_region="Knee",
+        instructions="Perform slowly with support.",
+        repetitions=10,
+        sets=3,
+        frequency="Daily",
+    )
+
+    assert exercise.id
+    assert exercise.name == "Wall squat"
+
+    updated = update_exercise(
+        exercise,
+        exercise_name="Supported wall squat",
+        frequency="Twice daily",
+    )
+
+    assert updated.name == "Supported wall squat"
+    assert updated.frequency == "Twice daily"
+
+
+def test_rehabilitation_service_progress_summary(session):
+    record = _record(session, "service-progress")
+    therapist = _therapist(session, "service-progress")
+
+    assessment = create_initial_assessment(
+        rehabilitation_record_id=record.id,
+        assessment_date=date.today(),
+        functional_score=75,
+        assessment_summary="Functional improvement",
+    )
+
+    plan = create_therapy_plan(
+        rehabilitation_record_id=record.id,
+        patient_id=record.patient_id,
+        therapist_id=therapist.id,
+        plan_name="Progress plan",
+        start_date=date.today(),
+        goals=["Improve walking"],
+    )
+
+    therapy_session = add_therapy_session(
+        therapy_plan_id=plan.id,
+        patient_id=record.patient_id,
+        therapist_id=therapist.id,
+        scheduled_start=datetime.now(timezone.utc),
+        pain_before=6,
+        pain_after=3,
+    )
+    complete_therapy_session(therapy_session)
+
+    summary = build_rehabilitation_progress(record)
+
+    assert assessment.id
+    assert summary["record_id"] == record.id
+    assert summary["total_plans"] == 1
+    assert summary["active_plans"] == 1
+    assert summary["total_sessions"] == 1
+    assert summary["completed_sessions"] == 1
+    assert summary["latest_pain_score"] == 3
+    assert summary["latest_functional_score"] == 75
