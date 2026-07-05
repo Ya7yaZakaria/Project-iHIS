@@ -117,6 +117,7 @@ class Department(BaseModel):
     name = db.Column(db.String(120), nullable=False, unique=True, index=True)
     description = db.Column(db.String(255))
     location = db.Column(db.String(120))
+    department_type = db.Column(db.String(40), nullable=False, default="Clinical", index=True)
 
 
 class Notification(BaseModel):

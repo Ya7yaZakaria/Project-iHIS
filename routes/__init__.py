@@ -15,6 +15,7 @@ from .rehabilitation_routes import rehabilitation_bp
 from .womens_health_routes import womens_health_bp, womens_health_clinical_bp
 from .nursing_routes import nursing_bp
 from .user_routes import roles_bp, users_bp
+from .administration_routes import administration_bp
 
 BLUEPRINTS = (
     auth_bp,
@@ -39,5 +40,6 @@ BLUEPRINTS = (
     reception_bp,
     users_bp,
     roles_bp,
+    administration_bp,
     
 )
